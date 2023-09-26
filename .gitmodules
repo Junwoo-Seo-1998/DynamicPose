@@ -1,0 +1,11 @@
+[submodule "JEngine/Libs/glfw/glfw"]
+	path = JEngine/Libs/glfw/glfw
+	url = https://github.com/glfw/glfw.git
+	branch = 3.3-stable
+[submodule "JEngine/Libs/imgui/imgui"]
+	path = JEngine/Libs/imgui/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
+[submodule "JEngine/Libs/spdlog/spdlog"]
+	path = JEngine/Libs/spdlog/spdlog
+	url = https://github.com/gabime/spdlog.git
