@@ -1,9 +1,9 @@
 #pragma once
+#include <functional>
 class Window
 {
 public:
-	void Init();
-	void Shutdown();
-private:
-	
+	virtual bool Init() = 0;
+	virtual void Shutdown() = 0;
+	virtual void Run(std::function<void()> callback) = 0;
 };

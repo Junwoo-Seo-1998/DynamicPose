@@ -9,3 +9,6 @@
 [submodule "JEngine/Libs/spdlog/spdlog"]
 	path = JEngine/Libs/spdlog/spdlog
 	url = https://github.com/gabime/spdlog.git
+[submodule "JEngine/Libs/flecs/flecs"]
+	path = JEngine/Libs/flecs/flecs
+	url = https://github.com/SanderMertens/flecs.git
