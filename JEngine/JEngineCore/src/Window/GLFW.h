@@ -11,6 +11,7 @@ public:
 	void Shutdown() override;
 	void Run(std::function<void()> callback) override;
 
+	void* GetRawHandle() override;
 private:
 	std::shared_ptr<GLFWwindow> m_Window;
 };

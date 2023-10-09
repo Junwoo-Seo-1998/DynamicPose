@@ -3,6 +3,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "Input.h"
+void KeyCallback(GLFWwindow* _pWindow, int _key, int _scancode, int _action, int _mods)
+{
+
+}
 bool GLFW::Init()
 {
     /* Initialize the library */
@@ -11,7 +16,7 @@ bool GLFW::Init()
 
     /* Create a windowed mode window and its OpenGL context */
     {
-        GLFWwindow* window = glfwCreateWindow(640, 480, "CS460", nullptr, nullptr);
+        GLFWwindow* window = glfwCreateWindow(640, 640, "CS460", nullptr, nullptr);
         if (!window)
         {
             glfwTerminate();
@@ -23,7 +28,10 @@ bool GLFW::Init()
         	glfwDestroyWindow(windowPtr);
         });
     }
-
+    glfwSetKeyCallback(m_Window.get(),Input::GLFWKeyCallback);
+    glfwSetMouseButtonCallback(m_Window.get(), Input::GLFWMouseCallback);
+    glfwSetScrollCallback(m_Window.get(), Input::GLFWMouseScrollCallback);
+    glfwSetCursorPosCallback(m_Window.get(), Input::GLFWMousePositionCallback);
     glfwMakeContextCurrent(m_Window.get());
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 }
@@ -48,6 +56,12 @@ void GLFW::Run(std::function<void()> callback)
         callback();
 
         glfwSwapBuffers(m_Window.get());
+        Input::Reset();
         glfwPollEvents();
     }
+}
+
+void* GLFW::GetRawHandle()
+{
+    return m_Window.get();
 }

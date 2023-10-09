@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{1653CE33-0220-293F-2B39-17E717655ECD}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Scene">
       <UniqueIdentifier>{B3F7140E-1F0C-3DBF-E88D-E01E546139F0}</UniqueIdentifier>
     </Filter>
@@ -15,12 +18,23 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\Components.h" />
+    <ClInclude Include="src\GraphicData.h" />
+    <ClInclude Include="src\Graphics\Shader.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.h" />
+    <ClInclude Include="src\Model.h" />
+    <ClInclude Include="src\Parser.h" />
     <ClInclude Include="src\Scene\Scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\System\Graphics\SceneRenderer.h">
+      <Filter>System\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System\Graphics\SceneViewer.h">
       <Filter>System\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\System\System.h">
@@ -32,10 +46,28 @@
     <ClInclude Include="src\Window\Window.h">
       <Filter>Window</Filter>
     </ClInclude>
+    <ClInclude Include="src\File.h" />
+    <ClInclude Include="src\Graphics\VertexBuffer.h" />
+    <ClInclude Include="src\Graphics\VertexArray.h" />
+    <ClInclude Include="src\Graphics\IndexBuffer.h" />
+    <ClInclude Include="src\Graphics\MeshFactory.h" />
+    <ClInclude Include="src\Bone.h" />
+    <ClInclude Include="src\AssimpGLMHelpers.h" />
+    <ClInclude Include="src\Animator.h" />
+    <ClInclude Include="src\System\Graphics\SceneCamera.h" />
+    <ClInclude Include="src\Input.h" />
+    <ClInclude Include="src\Graphics\DebugRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\ImguiImpl.cpp" />
+    <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\Parser.cpp" />
+    <ClCompile Include="src\StbImpl.cpp" />
     <ClCompile Include="src\System\Graphics\SceneRenderer.cpp">
+      <Filter>System\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\System\Graphics\SceneViewer.cpp">
       <Filter>System\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Window\GLFW.cpp">
@@ -44,5 +76,15 @@
     <ClCompile Include="src\Window\Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Shader.cpp" />
+    <ClCompile Include="src\File.cpp" />
+    <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
+    <ClCompile Include="src\Graphics\VertexArray.cpp" />
+    <ClCompile Include="src\Graphics\IndexBuffer.cpp" />
+    <ClCompile Include="src\Graphics\MeshFactory.cpp" />
+    <ClCompile Include="src\Bone.cpp" />
+    <ClCompile Include="src\System\Graphics\SceneCamera.cpp" />
+    <ClCompile Include="src\Input.cpp" />
+    <ClCompile Include="src\Graphics\DebugRenderer.cpp" />
   </ItemGroup>
 </Project>

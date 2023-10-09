@@ -14,9 +14,11 @@ group ""
 IncludeDir={}
 IncludeDir["glfw"]="Libs/glfw/glfw/include/"
 IncludeDir["glad"]="Libs/glad/"
-IncludeDir["imgui"]="Libs/imgui/"
+IncludeDir["imgui"]="Libs/imgui/imgui/"
+IncludeDir["glm"]="Libs/glm/"
 IncludeDir["flecs"]="Libs/flecs/flecs/include/"
 IncludeDir["assimp"]="Libs/assimp/include/"
+IncludeDir["stb"]="Libs/stb/"
 --lib dir
 LibraryDir = {}
 LibraryDir["D_assimp"]="Libs/assimp/dbg"
@@ -58,11 +60,14 @@ project "JEngineCore"
     includedirs
     {
         "JEngineCore",
+        "JEngineCore/src",
         "%{IncludeDir.glfw}",
         "%{IncludeDir.glad}",
         "%{IncludeDir.imgui}",
         "%{IncludeDir.flecs}",
         "%{IncludeDir.assimp}",
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.stb}",
     }
     files {
         "JEngineCore/src/**.h",
@@ -144,6 +149,7 @@ project "JEngine"
         "%{IncludeDir.glad}",
         "%{IncludeDir.imgui}",
         "%{IncludeDir.flecs}",
+        "%{IncludeDir.glm}",
     }
     files 
     {

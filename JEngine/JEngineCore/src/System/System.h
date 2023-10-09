@@ -1,6 +1,11 @@
 #pragma once
+namespace flecs
+{
+	struct world;
+}
+
 class System
 {
 public:
-	void RegisterSystem();
+	virtual void RegisterSystem(flecs::world& _world) = 0;
 };
