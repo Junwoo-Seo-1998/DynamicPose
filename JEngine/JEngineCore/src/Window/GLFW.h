@@ -12,6 +12,8 @@ public:
 	void Run(std::function<void()> callback) override;
 
 	void* GetRawHandle() override;
+	std::tuple<int, int> GetWindowSize() override;
+
 private:
 	std::shared_ptr<GLFWwindow> m_Window;
 };

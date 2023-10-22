@@ -134,3 +134,8 @@ flecs::world& Application::GetWorld()
 {
 	return m_World;
 }
+
+std::shared_ptr<Window> Application::GetWindow()
+{
+	return m_Window;
+}

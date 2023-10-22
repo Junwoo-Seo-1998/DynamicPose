@@ -43,6 +43,7 @@ struct MainCamera
 {
 	glm::vec3 position{ 0.f,0.f,0.f };
 	glm::mat4 view = glm::identity<glm::mat4>();
+	glm::mat4 projection = glm::identity<glm::mat4>();
 };
 struct Camera
 {};

@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "Input.h"
+#include "Window/Window.h"
 
 void SceneCamera::RegisterSystem(flecs::world& _world)
 {
@@ -68,6 +69,10 @@ void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 			camTransform.rotation = glm::quat(glm::radians(rotation));
 		}
 
-		Application::Get().GetWorld().set<MainCamera>({ camTransform.position,glm::lookAt(camTransform.position, camTransform.position + camTransform.GetForward(), { 0.f,1.f,0.f }) });
+		auto [width, height] = Application::Get().GetWindow()->GetWindowSize();
+		Application::Get().GetWorld().set<MainCamera>({ camTransform.position,
+			glm::lookAt(camTransform.position, camTransform.position + camTransform.GetForward(), { 0.f,1.f,0.f }),
+			glm::perspective(glm::radians(60.f), (float)width/height, 0.01f, 1000.f)
+			});
 	}
 }

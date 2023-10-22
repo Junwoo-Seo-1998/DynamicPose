@@ -37,6 +37,7 @@ public:
 	int Run();
 
 	flecs::world& GetWorld();
+	std::shared_ptr<Window> GetWindow();
 private:
 	std::shared_ptr<Window> m_Window;
 	flecs::world m_World{};

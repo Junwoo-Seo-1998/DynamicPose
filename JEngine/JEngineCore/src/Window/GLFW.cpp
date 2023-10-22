@@ -65,3 +65,10 @@ void* GLFW::GetRawHandle()
 {
     return m_Window.get();
 }
+
+std::tuple<int, int> GLFW::GetWindowSize()
+{
+    int width, height;
+    glfwGetFramebufferSize(m_Window.get(), &width, &height);
+    return { width, height };
+}
