@@ -98,7 +98,7 @@ int Application::Run()
 
 	//register systems
 	m_World.add<MainCamera>();
-	m_World.entity("MainCamera").set<Transform>({ {0,0,50.f} }).add<Camera>();
+	m_World.entity("MainCamera").set<Transform>({ {100.f,100.f,200.f} }).add<Camera>();
 	AddSystem<TransformSystem>();
 	AddSystem<AnimationSystem>();
 	AddSystem<SceneCamera>();

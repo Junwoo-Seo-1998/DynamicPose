@@ -16,7 +16,7 @@ bool GLFW::Init()
 
     /* Create a windowed mode window and its OpenGL context */
     {
-        GLFWwindow* window = glfwCreateWindow(640, 640, "CS460", nullptr, nullptr);
+        GLFWwindow* window = glfwCreateWindow(1280, 640, "CS460", nullptr, nullptr);
         if (!window)
         {
             glfwTerminate();

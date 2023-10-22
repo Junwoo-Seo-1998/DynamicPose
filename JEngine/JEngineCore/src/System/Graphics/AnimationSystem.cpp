@@ -53,18 +53,18 @@ void AnimationSystem::UpdateTransforms(flecs::entity entity, AnimatorComponent& 
 		//todo: interpol
 		float posfactor=
 		Math::GetInterpolationFactor(channel.Positions[posIndex].timeStamp, channel.Positions[posIndex + 1].timeStamp, currentTime);
-		glm::vec3 finalPos=glm::mix(channel.Positions[posIndex].position, channel.Positions[posIndex+1].position
+		glm::vec3 finalPos = Math::Lerp(channel.Positions[posIndex].position, channel.Positions[posIndex+1].position
 			, posfactor);
 		toUpdate->position = finalPos;
 
 		float rotfactor =
 			Math::GetInterpolationFactor(channel.Rotations[rotIndex].timeStamp, channel.Rotations[rotIndex + 1].timeStamp, currentTime);
-		glm::quat finalRot = glm::mix(channel.Rotations[rotIndex].Rotation, channel.Rotations[rotIndex + 1].Rotation
+		glm::quat finalRot = Math::Slerp(channel.Rotations[rotIndex].Rotation, channel.Rotations[rotIndex + 1].Rotation
 			, rotfactor);
 		toUpdate->rotation = finalRot;
 		float scalefactor =
 			Math::GetInterpolationFactor(channel.Scales[scaleIndex].timeStamp, channel.Scales[scaleIndex + 1].timeStamp, currentTime);
-		glm::vec3 finalScale = glm::mix(channel.Scales[scaleIndex].scale, channel.Scales[scaleIndex + 1].scale
+		glm::vec3 finalScale = Math::Lerp(channel.Scales[scaleIndex].scale, channel.Scales[scaleIndex + 1].scale
 			, scalefactor);
 		toUpdate->scale = finalScale;
 	}
