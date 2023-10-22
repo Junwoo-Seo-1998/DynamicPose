@@ -9,10 +9,10 @@ class SceneRenderer:public System
 {
 public:
 	void RegisterSystem(flecs::world& _world) override;
-
-	void RenderScene(flecs::iter& iter, Transform* transform, Renderer* renderer);
 private:
-	void DebugRender(flecs::iter& iter, DebugBone* bone);
+	void DebugRender(flecs::iter& iter, Transform* transform, DebugBone* bone);
+	void RenderSkinnedMesh(flecs::iter& iter, AnimatorComponent* animator);
+	void RenderSkinnedMesh(flecs::entity entity);
 
 	std::shared_ptr<VertexArray> m_VertexArray;
 	std::shared_ptr<Shader> m_RenderShader;

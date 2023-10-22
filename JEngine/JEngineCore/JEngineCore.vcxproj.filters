@@ -20,16 +20,37 @@
   <ItemGroup>
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\Application.h" />
+    <ClInclude Include="src\AssimpGLMHelpers.h" />
     <ClInclude Include="src\Components.h" />
+    <ClInclude Include="src\File.h" />
     <ClInclude Include="src\GraphicData.h" />
+    <ClInclude Include="src\Graphics\DebugRenderer.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\IndexBuffer.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\MeshFactory.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
     <ClInclude Include="src\Graphics\Shader.h">
       <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\Graphics\VertexArray.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\VertexBuffer.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Parser.h" />
     <ClInclude Include="src\Scene\Scene.h">
       <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System\Graphics\SceneCamera.h">
+      <Filter>System\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\System\Graphics\SceneRenderer.h">
       <Filter>System\Graphics</Filter>
@@ -40,35 +61,55 @@
     <ClInclude Include="src\System\System.h">
       <Filter>System</Filter>
     </ClInclude>
+    <ClInclude Include="src\System\TransformSystem.h">
+      <Filter>System</Filter>
+    </ClInclude>
     <ClInclude Include="src\Window\GLFW.h">
       <Filter>Window</Filter>
     </ClInclude>
     <ClInclude Include="src\Window\Window.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="src\File.h" />
-    <ClInclude Include="src\Graphics\VertexBuffer.h" />
-    <ClInclude Include="src\Graphics\VertexArray.h" />
-    <ClInclude Include="src\Graphics\IndexBuffer.h" />
-    <ClInclude Include="src\Graphics\MeshFactory.h" />
-    <ClInclude Include="src\Bone.h" />
-    <ClInclude Include="src\AssimpGLMHelpers.h" />
-    <ClInclude Include="src\Animator.h" />
-    <ClInclude Include="src\System\Graphics\SceneCamera.h" />
-    <ClInclude Include="src\Input.h" />
-    <ClInclude Include="src\Graphics\DebugRenderer.h" />
+    <ClInclude Include="src\Util\Math.h" />
+    <ClInclude Include="src\System\Graphics\AnimationSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\File.cpp" />
+    <ClCompile Include="src\Graphics\DebugRenderer.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\IndexBuffer.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\MeshFactory.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Shader.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\VertexArray.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\VertexBuffer.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\ImguiImpl.cpp" />
+    <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Parser.cpp" />
     <ClCompile Include="src\StbImpl.cpp" />
+    <ClCompile Include="src\System\Graphics\SceneCamera.cpp">
+      <Filter>System\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\System\Graphics\SceneRenderer.cpp">
       <Filter>System\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\System\Graphics\SceneViewer.cpp">
       <Filter>System\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\System\TransformSystem.cpp">
+      <Filter>System</Filter>
     </ClCompile>
     <ClCompile Include="src\Window\GLFW.cpp">
       <Filter>Window</Filter>
@@ -76,15 +117,7 @@
     <ClCompile Include="src\Window\Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Shader.cpp" />
-    <ClCompile Include="src\File.cpp" />
-    <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
-    <ClCompile Include="src\Graphics\VertexArray.cpp" />
-    <ClCompile Include="src\Graphics\IndexBuffer.cpp" />
-    <ClCompile Include="src\Graphics\MeshFactory.cpp" />
-    <ClCompile Include="src\Bone.cpp" />
-    <ClCompile Include="src\System\Graphics\SceneCamera.cpp" />
-    <ClCompile Include="src\Input.cpp" />
-    <ClCompile Include="src\Graphics\DebugRenderer.cpp" />
+    <ClCompile Include="src\Util\Math.cpp" />
+    <ClCompile Include="src\System\Graphics\AnimationSystem.cpp" />
   </ItemGroup>
 </Project>

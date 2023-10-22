@@ -12,6 +12,8 @@
 
 #include "GLFW/glfw3.h"
 #include "Graphics/DebugRenderer.h"
+#include "System/TransformSystem.h"
+#include "System/Graphics/AnimationSystem.h"
 #include "System/Graphics/SceneCamera.h"
 #include "System/Graphics/SceneRenderer.h"
 #include "System/Graphics/SceneViewer.h"
@@ -96,7 +98,9 @@ int Application::Run()
 
 	//register systems
 	m_World.add<MainCamera>();
-	m_World.entity("MainCamera").set<Transform>({ {0,50.,50.f} }).add<Camera>();
+	m_World.entity("MainCamera").set<Transform>({ {0,0,50.f} }).add<Camera>();
+	AddSystem<TransformSystem>();
+	AddSystem<AnimationSystem>();
 	AddSystem<SceneCamera>();
 	AddSystem<SceneRenderer>();
 	AddSystem<SceneViewer>();

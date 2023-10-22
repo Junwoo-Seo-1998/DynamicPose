@@ -15,7 +15,7 @@ void SceneCamera::RegisterSystem(flecs::world& _world)
 void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 {
 	constexpr float MouseSensitivity =5.f;
-	constexpr float speed = 5000.f;
+	constexpr float speed = 50.f;
 	for (int i: iter)
 	{
 		auto& camTransform = transform[i];
@@ -46,7 +46,7 @@ void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 
 		if (Input::IsPressed(KeyCode::LeftShift))
 		{
-			movement *= 5.f;
+			movement *= 100.f;
 		}
 
 		camTransform.position += movement * speed * iter.delta_time();

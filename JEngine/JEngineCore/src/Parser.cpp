@@ -27,6 +27,79 @@ Model AssimpParser::ParseModel(const std::string& file_name)
 	return model;
 }
 
+std::shared_ptr<Animation> AssimpParser::ParseAnimation(const std::string& file_name)
+{
+	Assimp::Importer importer;
+	unsigned flags = aiProcess_Triangulate | aiProcess_FlipUVs;
+	const aiScene* scene = importer.ReadFile(file_name, flags);
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+		return{};
+	}
+
+	aiAnimation* animation = scene->mAnimations[16];
+
+	std::shared_ptr<Animation> toReturn = std::make_shared<Animation>();
+	Animation& ani = *toReturn;
+
+	ani.AnimationName = animation->mName.C_Str();
+	ani.Duration = animation->mDuration;
+	ani.TicksPerSecond = animation->mTicksPerSecond;
+	
+	int size = animation->mNumChannels;
+	ani.Channels.reserve(size);
+	for (int i = 0; i < size; i++)
+	{
+		aiNodeAnim* channel = animation->mChannels[i];
+		Channel channelStruct;
+		channelStruct.Name = channel->mNodeName.C_Str();
+
+		//parse data
+		int NumPostions = channel->mNumPositionKeys;
+		channelStruct.Positions.reserve(NumPostions);
+		for (int positionIndex = 0; positionIndex < NumPostions; ++positionIndex)
+		{
+			aiVector3D aiPosition = channel->mPositionKeys[positionIndex].mValue;
+			float timeStamp = channel->mPositionKeys[positionIndex].mTime;
+			KeyPosition data;
+			data.position = AssimpGLMHelpers::GetGLMVec(aiPosition);
+			data.timeStamp = timeStamp;
+			channelStruct.Positions.push_back(data);
+		}
+
+		int NumRotations = channel->mNumRotationKeys;
+		channelStruct.Rotations.reserve(NumRotations);
+		for (int rotationIndex = 0; rotationIndex < NumRotations; ++rotationIndex)
+		{
+			aiQuaternion aiOrientation = channel->mRotationKeys[rotationIndex].mValue;
+			float timeStamp = channel->mRotationKeys[rotationIndex].mTime;
+			KeyRotation data;
+			data.Rotation = AssimpGLMHelpers::GetGLMQuat(aiOrientation);
+			data.timeStamp = timeStamp;
+			channelStruct.Rotations.push_back(data);
+		}
+
+		int NumScalings = channel->mNumScalingKeys;
+		channelStruct.Scales.reserve(NumScalings);
+		for (int keyIndex = 0; keyIndex < NumScalings; ++keyIndex)
+		{
+			aiVector3D scale = channel->mScalingKeys[keyIndex].mValue;
+			float timeStamp = channel->mScalingKeys[keyIndex].mTime;
+			KeyScale data;
+			data.scale = AssimpGLMHelpers::GetGLMVec(scale);
+			data.timeStamp = timeStamp;
+			channelStruct.Scales.push_back(data);
+		}
+
+		ani.Channels.push_back(channelStruct);
+		ani.ChannelsMap[channelStruct.Name] = channelStruct;
+	}
+
+
+	return toReturn;
+}
+
 
 ModelNode AssimpParser::ProcessNode(const aiScene* scene, aiNode* node, std::map<std::string, BoneInfo>& _BoneInfoMap, int& _BoneCounter)
 {
@@ -140,68 +213,3 @@ Mesh AssimpParser::ProcessMesh(const aiScene* scene, aiMesh* _mesh, std::map<std
 	return mesh;
 }
 
-
-
-Animation AssimpParser::ParseAnimation(const std::string& file_name, Model& model)
-{
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(file_name, aiProcess_Triangulate);
-	assert(scene && scene->mRootNode);
-	Animation ani;
-	for (int i=0; i<scene->mNumAnimations; ++i)
-	{
-		std::cout << scene->mAnimations[i]->mName.C_Str() << std::endl;
-	}
-
-	aiAnimation* animation = scene->mAnimations[16];
-
-	ani.name = animation->mName.C_Str();
-	ani.duration = animation->mDuration;
-	ani.ticksPerSecond = animation->mTicksPerSecond;
-
-	aiMatrix4x4 globalTransformation = scene->mRootNode->mTransformation;
-	globalTransformation = globalTransformation.Inverse();
-
-	ani.rootNode = ProcessAnimationNode(scene->mRootNode);
-
-	int size = animation->mNumChannels;
-
-	auto& boneInfoMap = model.boneInfoMap;//getting m_BoneInfoMap from Model class
-	int& boneCount = model.boneCounter; //getting the m_BoneCounter from Model class
-
-	//reading channels(bones engaged in an animation and their keyframes)
-	for (int i = 0; i < size; i++)
-	{
-		auto channel = animation->mChannels[i];
-		std::string boneName = channel->mNodeName.data;
-
-		if (boneInfoMap.find(boneName) == boneInfoMap.end())
-		{
-			boneInfoMap[boneName].id = boneCount;
-			boneCount++;
-		}
-		ani.bones.push_back(Bone(channel->mNodeName.data,
-			boneInfoMap[channel->mNodeName.data].id, channel));
-	}
-
-	ani.boneInfoMap = boneInfoMap;
-	return ani;
-}
-
-
-AssimpNodeData AssimpParser::ProcessAnimationNode(const aiNode* src)
-{
-	assert(src);
-	AssimpNodeData dest;
-
-	dest.name = src->mName.data;
-	dest.transformation = AssimpGLMHelpers::ConvertMatrixToGLMFormat(src->mTransformation);
-	dest.childrenCount = src->mNumChildren;
-
-	for (int i = 0; i < src->mNumChildren; i++)
-	{
-		AssimpNodeData newData = ProcessAnimationNode(src->mChildren[i]);
-		dest.children.push_back(newData);
-	}
-	return  dest;
-}

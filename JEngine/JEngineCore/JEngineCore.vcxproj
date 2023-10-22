@@ -104,10 +104,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Animation.h" />
-    <ClInclude Include="src\Animator.h" />
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\AssimpGLMHelpers.h" />
-    <ClInclude Include="src\Bone.h" />
     <ClInclude Include="src\Components.h" />
     <ClInclude Include="src\File.h" />
     <ClInclude Include="src\GraphicData.h" />
@@ -122,16 +120,18 @@
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Parser.h" />
     <ClInclude Include="src\Scene\Scene.h" />
+    <ClInclude Include="src\System\Graphics\AnimationSystem.h" />
     <ClInclude Include="src\System\Graphics\SceneCamera.h" />
     <ClInclude Include="src\System\Graphics\SceneRenderer.h" />
     <ClInclude Include="src\System\Graphics\SceneViewer.h" />
     <ClInclude Include="src\System\System.h" />
+    <ClInclude Include="src\System\TransformSystem.h" />
+    <ClInclude Include="src\Util\Math.h" />
     <ClInclude Include="src\Window\GLFW.h" />
     <ClInclude Include="src\Window\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\Bone.cpp" />
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\Graphics\DebugRenderer.cpp" />
     <ClCompile Include="src\Graphics\IndexBuffer.cpp" />
@@ -144,9 +144,12 @@
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Parser.cpp" />
     <ClCompile Include="src\StbImpl.cpp" />
+    <ClCompile Include="src\System\Graphics\AnimationSystem.cpp" />
     <ClCompile Include="src\System\Graphics\SceneCamera.cpp" />
     <ClCompile Include="src\System\Graphics\SceneRenderer.cpp" />
     <ClCompile Include="src\System\Graphics\SceneViewer.cpp" />
+    <ClCompile Include="src\System\TransformSystem.cpp" />
+    <ClCompile Include="src\Util\Math.cpp" />
     <ClCompile Include="src\Window\GLFW.cpp" />
     <ClCompile Include="src\Window\Window.cpp" />
   </ItemGroup>
