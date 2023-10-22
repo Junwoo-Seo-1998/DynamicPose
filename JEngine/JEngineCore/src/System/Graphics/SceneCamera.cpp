@@ -68,6 +68,6 @@ void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 			camTransform.rotation = glm::quat(glm::radians(rotation));
 		}
 
-		Application::Get().GetWorld().set<MainCamera>({ glm::lookAt(camTransform.position, camTransform.position + camTransform.GetForward(), { 0.f,1.f,0.f }) });
+		Application::Get().GetWorld().set<MainCamera>({ camTransform.position,glm::lookAt(camTransform.position, camTransform.position + camTransform.GetForward(), { 0.f,1.f,0.f }) });
 	}
 }

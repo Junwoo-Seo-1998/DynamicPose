@@ -19,10 +19,17 @@ uniform MatrixData Matrix;
 const int MAX_BONES = 100;
 const int MAX_BONE_INFLUENCE = 4;
 uniform mat4 finalBonesMatrices[MAX_BONES];
+
+
+out VS_OUT{ 
+	vec3 FragPos;
+	vec3 NormalVector;
+} vs_out; 
 		
 void main()
 {
     vec4 totalPosition = vec4(0.0f);
+    vec3 totalNormal = vec3(0.0f);
     for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++)
     {
         if(boneIds[i] == -1.f) 
@@ -34,7 +41,11 @@ void main()
         }
         vec4 localPosition = finalBonesMatrices[int(boneIds[i])] * vec4(aPos.x, aPos.y, aPos.z, 1.0f);
         totalPosition += localPosition * weights[i];
-        vec3 localNormal = mat3(finalBonesMatrices[int(boneIds[i])]) * aNormal;
+        vec3 localNormal = mat3(transpose(inverse(finalBonesMatrices[int(boneIds[i])]))) * aNormal;
+        totalNormal += localNormal * weights[i];
    }
 	gl_Position = Matrix.Projection*Matrix.View*Matrix.Model*totalPosition;
+
+    vs_out.FragPos = vec3(Matrix.Model*totalPosition);
+	vs_out.NormalVector=mat3(transpose(inverse(Matrix.Model))) * aNormal;
 }

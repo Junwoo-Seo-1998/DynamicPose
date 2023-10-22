@@ -38,7 +38,7 @@ void CreateModel(flecs::world& _world, Model& _model)
 				std::cout << "mesh: " << model.name << std::endl;
 				for(auto m:model.meshes)
 				{
-					_world.entity().child_of(obj).add<Transform>().set<Renderer>({ m });
+					_world.entity().child_of(obj).add<Transform>().set<SkinnedMeshRenderer>({ m });
 				}
 			}
 			else
@@ -85,11 +85,16 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		{
 			DebugRender(iter, transform, bone);
 		});
+
+	glEnable(GL_CULL_FACE);
+	glDepthFunc(GL_LESS);
+	
 }
 
 void SceneRenderer::DebugRender(flecs::iter& iter, Transform* transform, DebugBone* bone)
 {
-	DebugRenderer::BeginScene(glm::perspective(glm::radians(90.f), 1.0f, 0.001f, 1000.f)
+	glDisable(GL_DEPTH_TEST);
+	DebugRenderer::BeginScene(glm::perspective(glm::radians(90.f), 1.0f, 0.01f, 1000.f)
 		* Application::Get().GetWorld().get<MainCamera>()->view, { 0.f,1.f,0.f });
 	for(int i: iter)
 	{
@@ -106,12 +111,16 @@ void SceneRenderer::DebugRender(flecs::iter& iter, Transform* transform, DebugBo
 
 void SceneRenderer::RenderSkinnedMesh(flecs::iter& iter, AnimatorComponent* animator)
 {
+	glEnable(GL_DEPTH_TEST);
 	m_VertexArray->Bind();
 	m_RenderShader->Use();
+	m_RenderShader->SetFloat3("CamPos", Application::Get().GetWorld().get<MainCamera>()->position);
 	m_RenderShader->SetMat4("Matrix.View", Application::Get().GetWorld().get<MainCamera>()->view);
 	glm::mat4 projection = glm::perspective(glm::radians(90.f), 1.0f, 0.001f, 1000.f);
 	m_RenderShader->SetMat4("Matrix.Projection", projection);
 	m_RenderShader->SetFloat4("Color", glm::vec4{ 1.f });
+
+	
 
 	for (int i:iter)
 	{
@@ -130,9 +139,9 @@ void SceneRenderer::RenderSkinnedMesh(flecs::iter& iter, AnimatorComponent* anim
 
 void SceneRenderer::RenderSkinnedMesh(flecs::entity entity)
 {
-	if(entity.has<Renderer>())
+	if(entity.has<SkinnedMeshRenderer>())
 	{
-		const Renderer* renderer = entity.get<Renderer>();
+		const SkinnedMeshRenderer* renderer = entity.get<SkinnedMeshRenderer>();
 		renderer->instance.m_Buffer->BindToVertexArray();
 		renderer->instance.m_IndexBuffer->BindToVertexArray();
 		glDrawElements(GL_TRIANGLES, renderer->instance.m_IndexBuffer->GetSize(), GL_UNSIGNED_INT, nullptr);
