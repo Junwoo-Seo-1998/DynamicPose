@@ -64,7 +64,7 @@ void AnimationSystem::UpdateTransforms(flecs::entity entity, AnimatorComponent& 
 		toUpdate->rotation = finalRot;
 		float scalefactor =
 			Math::GetInterpolationFactor(channel.Scales[scaleIndex].timeStamp, channel.Scales[scaleIndex + 1].timeStamp, currentTime);
-		glm::vec3 finalScale = Math::Lerp(channel.Scales[scaleIndex].scale, channel.Scales[scaleIndex + 1].scale
+		glm::vec3 finalScale = Math::Elerp(channel.Scales[scaleIndex].scale, channel.Scales[scaleIndex + 1].scale
 			, scalefactor);
 		toUpdate->scale = finalScale;
 	}

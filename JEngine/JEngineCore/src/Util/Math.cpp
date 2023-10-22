@@ -44,3 +44,12 @@ glm::quat Math::Slerp(const glm::quat& start, const glm::quat& end, float factor
 	float angle = glm::acos(cosTheta);
 	return (glm::sin((1.f - factor) * angle) * start + glm::sin(factor * angle) * z) / glm::sin(angle);
 }
+
+glm::vec3 Math::Elerp(const glm::vec3& start, const glm::vec3& end, float factor)
+{
+	float x = glm::pow(end.x / start.x, factor) * start.x;
+	float y = glm::pow(end.y / start.y, factor) * start.y;
+	float z = glm::pow(end.z / start.z, factor) * start.z;
+
+	return { x,y,z };
+}
