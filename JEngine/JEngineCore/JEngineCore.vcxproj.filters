@@ -72,6 +72,7 @@
     </ClInclude>
     <ClInclude Include="src\Util\Math.h" />
     <ClInclude Include="src\System\Graphics\AnimationSystem.h" />
+    <ClInclude Include="src\Math\VQS.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
@@ -119,5 +120,6 @@
     </ClCompile>
     <ClCompile Include="src\Util\Math.cpp" />
     <ClCompile Include="src\System\Graphics\AnimationSystem.cpp" />
+    <ClCompile Include="src\Math\VQS.cpp" />
   </ItemGroup>
 </Project>

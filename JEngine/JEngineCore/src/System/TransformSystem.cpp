@@ -1,5 +1,7 @@
 #include "TransformSystem.h"
 #include "Components.h"
+#include "Util/Math.h"
+
 void TransformSystem::RegisterSystem(flecs::world& _world)
 {
 	_world.system<Transform, Transform>("TransformSystem")
@@ -13,16 +15,41 @@ void TransformSystem::RegisterSystem(flecs::world& _world)
 
 void TransformSystem::UpdateTransform(flecs::iter& iter, Transform* transform, Transform* p_transform)
 {
+	constexpr bool useVQS = true;
 	for (int i: iter) //breath first
 	{
 		Transform& transformComp = transform[i];
-		glm::mat4 final = glm::translate(glm::mat4(1.0f), transformComp.position)
-			* glm::toMat4(glm::quat(transformComp.rotation))
-			* glm::scale(glm::mat4(1.0f), transformComp.scale);
+		auto localVQS = VQS{
+			transformComp.Position,
+			transform->Rotation,
+			Math::GetMaxElement(transformComp.Scale) //since vqs only support uniform scaling
+		};
+
+		glm::mat4 final;
+		if (useVQS)
+		{
+			transformComp.FinalVQS = localVQS;
+			final = localVQS.toMat();
+		}
+		else
+		{
+			final = glm::translate(glm::mat4(1.0f), transformComp.Position)
+				* glm::toMat4(glm::quat(transformComp.Rotation))
+				* glm::scale(glm::mat4(1.0f), transformComp.Scale);
+		}
+
 		if (p_transform)
 		{
-			final = p_transform->final * final;
+			if (useVQS)
+			{
+				transformComp.FinalVQS = p_transform->FinalVQS * localVQS;
+				final = transformComp.FinalVQS.toMat();
+			}
+			else
+			{
+				final = p_transform->FinalTransformMatrix * final;
+			}
 		}
-		transformComp.final = final;
+		transformComp.FinalTransformMatrix = final;
 	}
 }

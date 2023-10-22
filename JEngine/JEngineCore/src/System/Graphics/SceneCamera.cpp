@@ -50,7 +50,7 @@ void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 			movement *= 100.f;
 		}
 
-		camTransform.position += movement * speed * iter.delta_time();
+		camTransform.Position += movement * speed * iter.delta_time();
 
 		if (Input::IsPressed(KeyCode::LeftAlt) && Input::IsPressed(MouseCode::Left))
 		{
@@ -58,7 +58,7 @@ void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 
 			x_offset *= MouseSensitivity * iter.delta_time();
 			y_offset *= MouseSensitivity * iter.delta_time();
-			glm::vec3 rotation = glm::degrees(glm::eulerAngles(camTransform.rotation));
+			glm::vec3 rotation = glm::degrees(glm::eulerAngles(camTransform.Rotation));
 			float Pitch = rotation.x + y_offset;
 
 			//Pitch = glm::clamp(Pitch, glm::radians(-89.0f), glm::radians(89.0f));
@@ -66,12 +66,12 @@ void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 			rotation.x = Pitch;
 			rotation.y -= x_offset;
 
-			camTransform.rotation = glm::quat(glm::radians(rotation));
+			camTransform.Rotation = glm::quat(glm::radians(rotation));
 		}
 
 		auto [width, height] = Application::Get().GetWindow()->GetWindowSize();
-		Application::Get().GetWorld().set<MainCamera>({ camTransform.position,
-			glm::lookAt(camTransform.position, camTransform.position + camTransform.GetForward(), { 0.f,1.f,0.f }),
+		Application::Get().GetWorld().set<MainCamera>({ camTransform.Position,
+			glm::lookAt(camTransform.Position, camTransform.Position + camTransform.GetForward(), { 0.f,1.f,0.f }),
 			glm::perspective(glm::radians(60.f), (float)width/height, 0.01f, 1000.f)
 			});
 	}

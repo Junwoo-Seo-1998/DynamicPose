@@ -92,8 +92,8 @@ void SceneRenderer::DebugRender(flecs::iter& iter, Transform* transform, DebugBo
 		auto current = iter.entity(i);
 		if (current.parent().is_valid() && current.parent().has<DebugBone>())
 		{
-			glm::vec3 p1 = current.parent().get<Transform>()->final * glm::vec4(0.f, 0.f, 0.f, 1.f);
-			glm::vec3 p2 = transform[i].final * glm::vec4(0.f, 0.f, 0.f, 1.f);
+			glm::vec3 p1 = current.parent().get<Transform>()->FinalTransformMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
+			glm::vec3 p2 = transform[i].FinalTransformMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
 			DebugRenderer::DrawLine(p1, p2);
 		}
 	}
@@ -115,7 +115,7 @@ void SceneRenderer::RenderSkinnedMesh(flecs::iter& iter, AnimatorComponent* anim
 	for (auto i:iter)
 	{
 		auto rootEntity = iter.entity(i);
-		m_RenderShader->SetMat4("Matrix.Model", rootEntity.get<Transform>()->final);
+		m_RenderShader->SetMat4("Matrix.Model", rootEntity.get<Transform>()->FinalTransformMatrix);
 
 		AnimatorComponent& animator_component = animator[i];
 		auto& BoneMatrices = animator_component.FinalBoneMatrices;

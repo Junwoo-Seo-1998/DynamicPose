@@ -50,23 +50,23 @@ void AnimationSystem::UpdateTransforms(flecs::entity entity, AnimatorComponent& 
 		int scaleIndex = channel.GetScaleIndex(currentTime);
 		Transform* toUpdate = entity.get_mut<Transform>();
 
-		//todo: interpol
+		//Interpolation
 		float posfactor=
 		Math::GetInterpolationFactor(channel.Positions[posIndex].timeStamp, channel.Positions[posIndex + 1].timeStamp, currentTime);
 		glm::vec3 finalPos = Math::Lerp(channel.Positions[posIndex].position, channel.Positions[posIndex+1].position
 			, posfactor);
-		toUpdate->position = finalPos;
+		toUpdate->Position = finalPos;
 
 		float rotfactor =
 			Math::GetInterpolationFactor(channel.Rotations[rotIndex].timeStamp, channel.Rotations[rotIndex + 1].timeStamp, currentTime);
 		glm::quat finalRot = Math::Slerp(channel.Rotations[rotIndex].Rotation, channel.Rotations[rotIndex + 1].Rotation
 			, rotfactor);
-		toUpdate->rotation = finalRot;
+		toUpdate->Rotation = finalRot;
 		float scalefactor =
 			Math::GetInterpolationFactor(channel.Scales[scaleIndex].timeStamp, channel.Scales[scaleIndex + 1].timeStamp, currentTime);
 		glm::vec3 finalScale = Math::Elerp(channel.Scales[scaleIndex].scale, channel.Scales[scaleIndex + 1].scale
 			, scalefactor);
-		toUpdate->scale = finalScale;
+		toUpdate->Scale = finalScale;
 	}
 	entity.children([&](flecs::entity child)
 	{
@@ -79,7 +79,7 @@ void AnimationSystem::UpdateFinalBoneMatrices(flecs::entity entity, AnimatorComp
 	if(entity.has<BoneComponent>())
 	{
 		const BoneComponent* bone_component = entity.get<BoneComponent>();
-		animator.FinalBoneMatrices[bone_component->BoneMatrixID] = entity.get<Transform>()->final * bone_component->BoneOffset;
+		animator.FinalBoneMatrices[bone_component->BoneMatrixID] = entity.get<Transform>()->FinalTransformMatrix * bone_component->BoneOffset;
 	}
 	entity.children([&](flecs::entity child)
 	{

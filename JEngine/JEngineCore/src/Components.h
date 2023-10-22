@@ -5,27 +5,29 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Animation.h"
+#include "Math/VQS.h"
 
 using quaternion = glm::quat;
 struct Transform
 {
-	glm::vec3 position{ 0.f,0.f,0.f };
-	quaternion rotation{ 1.f, 0.f,0.f,0.f };
-	glm::vec3 scale{ 1.f,1.f,1.f };
+	glm::vec3 Position{ 0.f,0.f,0.f };
+	quaternion Rotation{ 1.f, 0.f,0.f,0.f };
+	glm::vec3 Scale{ 1.f,1.f,1.f };
 
-	glm::mat4 final{ 1.f };
+	VQS FinalVQS;
+	glm::mat4 FinalTransformMatrix{ 1.f };
 
 	glm::vec3 GetRight() const
 	{
-		return glm::toMat4(rotation) * glm::vec4{ 1.f,0.f,0.f ,0.f };
+		return glm::toMat4(Rotation) * glm::vec4{ 1.f,0.f,0.f ,0.f };
 	}
 	glm::vec3 GetUp() const
 	{
-		return glm::toMat4(rotation) * glm::vec4{ 0.f,1.f,0.f ,0.f };
+		return glm::toMat4(Rotation) * glm::vec4{ 0.f,1.f,0.f ,0.f };
 	}
 	glm::vec3 GetForward() const
 	{
-		return glm::toMat4(rotation) * glm::vec4{ 0.f,0.f,-1.f ,0.f };
+		return glm::toMat4(Rotation) * glm::vec4{ 0.f,0.f,-1.f ,0.f };
 	}
 };
 

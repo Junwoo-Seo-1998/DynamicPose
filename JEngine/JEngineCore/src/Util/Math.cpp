@@ -3,6 +3,12 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <iostream>
 #include <glm/gtx/matrix_decompose.hpp>
+
+float Math::GetMaxElement(const glm::vec3& val)
+{
+	return glm::max(glm::max(val.x, val.y), val.z);
+}
+
 bool Math::Decompose(const glm::mat4& transform, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale)
 {
 	glm::quat rot;
@@ -18,6 +24,15 @@ float Math::GetInterpolationFactor(float lastTimeStamp, float nextTimeStamp, flo
 	float midWayLength = animationTime - lastTimeStamp;
 	float framesDiff = nextTimeStamp - lastTimeStamp;
 	return midWayLength / framesDiff;
+}
+
+VQS Math::GetInterpolation(const VQS& start, const VQS& end, float factor)
+{
+	return {
+		Lerp(start.v, end.v,factor),
+		Slerp(start.q, end.q, factor),
+		Elerp(start.s, end.s,factor)
+	};
 }
 
 glm::quat Math::Slerp(const glm::quat& start, const glm::quat& end, float factor)
@@ -43,6 +58,11 @@ glm::quat Math::Slerp(const glm::quat& start, const glm::quat& end, float factor
 
 	float angle = glm::acos(cosTheta);
 	return (glm::sin((1.f - factor) * angle) * start + glm::sin(factor * angle) * z) / glm::sin(angle);
+}
+
+float Math::Elerp(const float& start, const float& end, float factor)
+{
+	return glm::pow(end / start, factor) * start;
 }
 
 glm::vec3 Math::Elerp(const glm::vec3& start, const glm::vec3& end, float factor)
