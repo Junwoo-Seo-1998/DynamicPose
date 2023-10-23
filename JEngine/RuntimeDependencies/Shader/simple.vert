@@ -2,7 +2,6 @@
 
 struct MatrixData
 {
-    mat4 Model;
     mat4 View;
     mat4 Projection;
     mat4 Normal;
@@ -44,8 +43,8 @@ void main()
         vec3 localNormal = mat3(transpose(inverse(finalBonesMatrices[int(boneIds[i])]))) * aNormal;
         totalNormal += localNormal * weights[i];
    }
-	gl_Position = Matrix.Projection*Matrix.View*Matrix.Model*totalPosition;
+	gl_Position = Matrix.Projection*Matrix.View*totalPosition;
 
-    vs_out.FragPos = vec3(Matrix.Model*totalPosition);
-	vs_out.NormalVector=mat3(transpose(inverse(Matrix.Model))) * aNormal;
+    vs_out.FragPos = vec3(totalPosition);
+	vs_out.NormalVector = totalNormal;
 }

@@ -7,11 +7,10 @@
 #include "Animation.h"
 #include "Math/VQS.h"
 
-using quaternion = glm::quat;
 struct Transform
 {
 	glm::vec3 Position{ 0.f,0.f,0.f };
-	quaternion Rotation{ 1.f, 0.f,0.f,0.f };
+	glm::quat Rotation{ 1.f, {0.f,0.f,0.f} };
 	glm::vec3 Scale{ 1.f,1.f,1.f };
 
 	VQS FinalVQS;
@@ -33,12 +32,22 @@ struct Transform
 
 struct DebugBone
 {
-	glm::mat4 transform;
+	bool placeholder;
 };
 
 struct SkinnedMeshRenderer
 {
 	MeshInstance instance;
+};
+
+
+struct Config
+{
+	bool ShowSkeleton = true;
+	bool UseVQS = true;
+	
+	std::vector<std::shared_ptr<Animation>> AnimationList;
+	std::shared_ptr<Animation> animationToUse;
 };
 
 struct MainCamera

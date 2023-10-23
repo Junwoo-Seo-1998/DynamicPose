@@ -17,16 +17,16 @@ MeshInstance::MeshInstance(Mesh& mesh)
 		PosNormal vertex;
 		vertex.Position = v.Position;
 		vertex.Normal = v.Normal;
-		for (int i=0; i<vertex.BoneIDs.size(); ++i)
+		for (int i=0; i< static_cast<int>(vertex.BoneIDs.size()); ++i)
 		{
-			vertex.BoneIDs[i] = v.BoneIDs[i];
+			vertex.BoneIDs[i] = static_cast<float>(v.BoneIDs[i]);
 			vertex.Weights[i] = v.Weights[i];
 		}
 		refined.emplace_back(vertex);
 	}
 
-	m_Buffer = VertexBuffer::CreateVertexBuffer(sizeof(PosNormal) * mesh.vertices.size());
-	m_Buffer->SetData(sizeof(PosNormal)*refined.size(), refined.data());
+	m_Buffer = VertexBuffer::CreateVertexBuffer(sizeof(PosNormal) * static_cast<int>(mesh.vertices.size()));
+	m_Buffer->SetData(sizeof(PosNormal)* static_cast<int>(refined.size()), refined.data());
 
 	m_Buffer->SetDataTypes({
 			{0, DataType::Float3},//location=0, pos
@@ -35,6 +35,6 @@ MeshInstance::MeshInstance(Mesh& mesh)
 			{3, DataType::Float4},//location=3, vec4
 		});
 
-	m_IndexBuffer = IndexBuffer::CreateIndexBuffer(mesh.indices.size());
-	m_IndexBuffer->SetData(mesh.indices.size(), mesh.indices.data());
+	m_IndexBuffer = IndexBuffer::CreateIndexBuffer(static_cast<int>(mesh.indices.size()));
+	m_IndexBuffer->SetData(static_cast<int>(mesh.indices.size()), mesh.indices.data());
 }

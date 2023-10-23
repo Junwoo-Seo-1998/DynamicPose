@@ -1,12 +1,13 @@
 #pragma once
 #include <glm/glm.hpp>
-
 #include "Math/VQS.h"
+#include "glm/gtc/quaternion.hpp"
 
 class Math
 {
 public:
 	static float GetMaxElement(const glm::vec3& val);
+
 
 	static bool Decompose(const glm::mat4& transform, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale);
 	static float GetInterpolationFactor(float lastTimeStamp, float nextTimeStamp, float animationTime);

@@ -30,7 +30,7 @@ void iterate_tree(flecs::entity e) {
 void SceneViewer::RenderSceneGUI(flecs::iter iter)
 {
 	ImGui::Begin("SceneViewer");
-	for (int i:iter)
+	for (auto i:iter)
 	{
 		flecs::entity e = iter.entity(i);
 		if (!e.parent().is_valid())

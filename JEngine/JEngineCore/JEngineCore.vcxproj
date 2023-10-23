@@ -55,7 +55,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DisableSpecificWarnings>4819;4996;4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4819;4996;4005;4098;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;flecs_STATIC;DEBUG;JJ_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;src;..\Libs\glfw\glfw\include;..\Libs\glad;..\Libs\imgui\imgui;..\Libs\flecs\flecs\include;..\Libs\assimp\include;..\Libs\glm;..\Libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -79,7 +79,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DisableSpecificWarnings>4819;4996;4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4819;4996;4005;4098;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>GLFW_INCLUDE_NONE;_CRT_SECURE_NO_WARNINGS;flecs_STATIC;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;src;..\Libs\glfw\glfw\include;..\Libs\glad;..\Libs\imgui\imgui;..\Libs\flecs\flecs\include;..\Libs\assimp\include;..\Libs\glm;..\Libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
@@ -121,6 +121,7 @@
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Parser.h" />
     <ClInclude Include="src\Scene\Scene.h" />
+    <ClInclude Include="src\System\DemoGUI.h" />
     <ClInclude Include="src\System\Graphics\AnimationSystem.h" />
     <ClInclude Include="src\System\Graphics\SceneCamera.h" />
     <ClInclude Include="src\System\Graphics\SceneRenderer.h" />
@@ -146,6 +147,7 @@
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Parser.cpp" />
     <ClCompile Include="src\StbImpl.cpp" />
+    <ClCompile Include="src\System\DemoGUI.cpp" />
     <ClCompile Include="src\System\Graphics\AnimationSystem.cpp" />
     <ClCompile Include="src\System\Graphics\SceneCamera.cpp" />
     <ClCompile Include="src\System\Graphics\SceneRenderer.cpp" />

@@ -12,6 +12,7 @@
 
 #include "GLFW/glfw3.h"
 #include "Graphics/DebugRenderer.h"
+#include "System/DemoGUI.h"
 #include "System/TransformSystem.h"
 #include "System/Graphics/AnimationSystem.h"
 #include "System/Graphics/SceneCamera.h"
@@ -24,7 +25,6 @@ static std::shared_ptr<Application> s_Application;
 
 std::shared_ptr<Application> Application::CreateInstance(const ApplicationBuilder& builder)
 {
-	//ASSERT(s_Application == nullptr, "Can Be Create Only Once");
 	s_Application = std::make_shared<Application>();
 	s_Application->m_Window = builder.m_Window;
 	return s_Application;
@@ -32,54 +32,11 @@ std::shared_ptr<Application> Application::CreateInstance(const ApplicationBuilde
 
 Application& Application::Get()
 {
-	//ASSERT(s_Application != nullptr, "The Application Has Not Been Created Yet");
 	return *s_Application;
 }
 
 int Application::Run()
 {
-	// Can only have one active scene
-	// in a game at a time.
-	/*m_World.add<ActiveScene>();
-
-	m_World.observer<ActiveScene>("Scene Change to Game")
-		.event(flecs::OnAdd)
-		.second<Scene>()
-		.each([](flecs::iter& it, size_t, ActiveScene)
-		{
-			flecs::world world = it.world();
-			flecs::entity scene = world.component<SceneRoot>();
-			//std::cout << ">> ActiveScene has changed to";
-			world.set_pipeline(world.get<Scene>()->pipeline);
-		});
-
-
-	m_World.component<SceneRoot>();
-
-	m_World.delete_with(flecs::ChildOf, m_World.entity<SceneRoot>());
-
-	flecs::entity game = m_World.pipeline()
-		.with(flecs::System)
-		.with()
-		.build();
-
-	// Set pipeline entities on the scenes
-   // to easily find them later with get().
-	m_World.set<Scene>({ game });
-
-	m_World.add<ActiveScene, Scene>();
-
-	auto object=m_World.entity("object");
-	object.add<Translation>();
-
-	m_World.system<Translation>("print").kind(flecs::OnStart).iter([](flecs::iter iter)
-	{
-		for(auto i:iter)
-			std::cout << iter.entity(i).name() << std::endl;
-	});
-
-	Assimp::Importer importer;*/
-
 	m_Window->Init();
 
 	IMGUI_CHECKVERSION();
@@ -93,17 +50,22 @@ int Application::Run()
 	ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWwindow*>(m_Window->GetRawHandle()), true);
 	ImGui_ImplOpenGL3_Init("#version 460");
 
-	glClearColor(0.2f, 0.2f, 1.f, 1.f);
+	glClearColor(0.2f, 0.2f, 0.8f, 1.f);
 	DebugRenderer::Init();
 
 	//register systems
+	m_World.add<Config>();
 	m_World.add<MainCamera>();
-	m_World.entity("MainCamera").set<Transform>({ {100.f,100.f,200.f} }).add<Camera>();
+	m_World.entity("MainCamera").set<Transform>({ {0.f,200.f,200.f}, 
+		glm::quat(glm::radians(glm::vec3(-30.f, 0.f, 0.f))),
+	}).add<Camera>();
+
 	AddSystem<TransformSystem>();
 	AddSystem<AnimationSystem>();
 	AddSystem<SceneCamera>();
 	AddSystem<SceneRenderer>();
 	AddSystem<SceneViewer>();
+	AddSystem<DemoGUI>();
 
 	m_Window->Run([&]()
 	{
@@ -111,9 +73,11 @@ int Application::Run()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		// Run All Registered Systems
 		m_World.progress();
 
-		// Rendering
+		// GUI Rendering
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

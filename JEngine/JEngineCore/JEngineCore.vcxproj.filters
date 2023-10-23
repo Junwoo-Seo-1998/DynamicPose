@@ -4,6 +4,9 @@
     <Filter Include="Graphics">
       <UniqueIdentifier>{1653CE33-0220-293F-2B39-17E717655ECD}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{AFF4887C-9B2B-8A0D-4418-7010302E060F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Scene">
       <UniqueIdentifier>{B3F7140E-1F0C-3DBF-E88D-E01E546139F0}</UniqueIdentifier>
     </Filter>
@@ -12,6 +15,9 @@
     </Filter>
     <Filter Include="System\Graphics">
       <UniqueIdentifier>{EAAFA7D1-563B-1596-5F4C-988ACB567196}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Util">
+      <UniqueIdentifier>{23A78D7C-0FDE-8E0D-B8CA-7410A4E00A0F}</UniqueIdentifier>
     </Filter>
     <Filter Include="Window">
       <UniqueIdentifier>{3DEA79DA-298C-A4B0-1247-B804FE872B01}</UniqueIdentifier>
@@ -43,11 +49,20 @@
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\Input.h" />
+    <ClInclude Include="src\Math\VQS.h">
+      <Filter>Math</Filter>
+    </ClInclude>
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Parser.h" />
     <ClInclude Include="src\Scene\Scene.h">
       <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System\DemoGUI.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System\Graphics\AnimationSystem.h">
+      <Filter>System\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\System\Graphics\SceneCamera.h">
       <Filter>System\Graphics</Filter>
@@ -64,15 +79,15 @@
     <ClInclude Include="src\System\TransformSystem.h">
       <Filter>System</Filter>
     </ClInclude>
+    <ClInclude Include="src\Util\Math.h">
+      <Filter>Util</Filter>
+    </ClInclude>
     <ClInclude Include="src\Window\GLFW.h">
       <Filter>Window</Filter>
     </ClInclude>
     <ClInclude Include="src\Window\Window.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="src\Util\Math.h" />
-    <ClInclude Include="src\System\Graphics\AnimationSystem.h" />
-    <ClInclude Include="src\Math\VQS.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
@@ -97,9 +112,18 @@
     </ClCompile>
     <ClCompile Include="src\ImguiImpl.cpp" />
     <ClCompile Include="src\Input.cpp" />
+    <ClCompile Include="src\Math\VQS.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Parser.cpp" />
     <ClCompile Include="src\StbImpl.cpp" />
+    <ClCompile Include="src\System\DemoGUI.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="src\System\Graphics\AnimationSystem.cpp">
+      <Filter>System\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\System\Graphics\SceneCamera.cpp">
       <Filter>System\Graphics</Filter>
     </ClCompile>
@@ -112,14 +136,14 @@
     <ClCompile Include="src\System\TransformSystem.cpp">
       <Filter>System</Filter>
     </ClCompile>
+    <ClCompile Include="src\Util\Math.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
     <ClCompile Include="src\Window\GLFW.cpp">
       <Filter>Window</Filter>
     </ClCompile>
     <ClCompile Include="src\Window\Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="src\Util\Math.cpp" />
-    <ClCompile Include="src\System\Graphics\AnimationSystem.cpp" />
-    <ClCompile Include="src\Math\VQS.cpp" />
   </ItemGroup>
 </Project>

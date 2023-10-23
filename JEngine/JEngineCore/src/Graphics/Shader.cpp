@@ -66,7 +66,7 @@ void Shader::SetMatVector4(const std::string& name, const std::vector<glm::mat4>
 {
 	Use();
 	int location = GetUniformLocation(name);
-	glUniformMatrix4fv(location, value.size(), GL_FALSE, glm::value_ptr(value[0]));
+	glUniformMatrix4fv(location, static_cast<int>(value.size()), GL_FALSE, glm::value_ptr(value[0]));
 }
 
 unsigned Shader::GetShaderProgram()

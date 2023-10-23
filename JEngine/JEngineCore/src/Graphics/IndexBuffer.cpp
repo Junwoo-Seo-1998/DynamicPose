@@ -20,7 +20,7 @@ void IndexBuffer::Bind() const
 
 void IndexBuffer::BindToVertexArray() const
 {
-	assert(m_Size >= 0, "didn't set size");
+	assert(m_Size >= 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffer);
 }
 

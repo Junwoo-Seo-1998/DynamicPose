@@ -14,7 +14,7 @@
 #include "Graphics/DebugRenderer.h"
 #include "Util/Math.h"
 
-void CreateModel(flecs::world& _world, Model& _model)
+flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string& name)
 {
 	std::function<void(ModelNode&, flecs::entity*, glm::mat4)> helper;
 	helper = [&](ModelNode& model, flecs::entity* parent, glm::mat4 ToParent)
@@ -40,7 +40,7 @@ void CreateModel(flecs::world& _world, Model& _model)
 			}
 			else
 			{
-				obj.set<DebugBone>({ ToParent * model.nodeToParent });
+				obj.add<DebugBone>();
 			}
 
 			for (ModelNode& m : model.children)
@@ -48,8 +48,9 @@ void CreateModel(flecs::world& _world, Model& _model)
 				helper(m, &obj, ToParent * model.nodeToParent);
 			}
 		};
-	flecs::entity parent = _world.entity(_model.name.c_str()).add<Transform>();
+	flecs::entity parent = _world.entity(name.c_str()).add<Transform>();
 	helper(_model.root, &parent, _model.root.nodeToParent);
+	return parent;
 }
 
 void SceneRenderer::RegisterSystem(flecs::world& _world)
@@ -62,10 +63,16 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	m_RenderShader = Shader::CreateShaderFromFile(source);
 
 	Model model = AssimpParser::ParseModel("Medieval.fbx");
-	CreateModel(_world, model);
+	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
 
-	auto animationHandle = AssimpParser::ParseAnimation("Medieval.fbx");
-	_world.lookup("Medieval").set<AnimatorComponent>({ animationHandle, });
+	auto one=CreateModel(_world, model,"MainModel");
+	one.set<AnimatorComponent>({ animationHandle[16], });
+
+	/*auto two = CreateModel(_world, model, "Model_2");
+	two.set<Transform>({ {100, 0, -100}, });
+	two.set<AnimatorComponent>({ animationHandle[3], });*/
+
+	_world.get_mut<Config>()->AnimationList = animationHandle;
 
 	_world.system<AnimatorComponent>("SkinnedMeshRenderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, AnimatorComponent* animator)
 	{
@@ -84,6 +91,8 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 void SceneRenderer::DebugRender(flecs::iter& iter, Transform* transform, DebugBone* bone)
 {
+	if(!iter.world().get<Config>()->ShowSkeleton)
+		return;
 	glDisable(GL_DEPTH_TEST);
 	DebugRenderer::BeginScene(Application::Get().GetWorld().get<MainCamera>()->projection
 		* Application::Get().GetWorld().get<MainCamera>()->view, { 0.f,1.f,0.f });
@@ -110,13 +119,9 @@ void SceneRenderer::RenderSkinnedMesh(flecs::iter& iter, AnimatorComponent* anim
 	m_RenderShader->SetMat4("Matrix.Projection", Application::Get().GetWorld().get<MainCamera>()->projection);
 	m_RenderShader->SetFloat4("Color", glm::vec4{ 1.f });
 
-	
-
 	for (auto i:iter)
 	{
 		auto rootEntity = iter.entity(i);
-		m_RenderShader->SetMat4("Matrix.Model", rootEntity.get<Transform>()->FinalTransformMatrix);
-
 		AnimatorComponent& animator_component = animator[i];
 		auto& BoneMatrices = animator_component.FinalBoneMatrices;
 		int size = static_cast<int>(BoneMatrices.size());

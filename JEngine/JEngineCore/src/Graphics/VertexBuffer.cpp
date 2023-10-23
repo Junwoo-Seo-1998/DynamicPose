@@ -115,8 +115,7 @@ void VertexBuffer::Bind() const
 
 void VertexBuffer::BindToVertexArray() const
 {
-	assert(m_DescribedData.GetSize() > 0, "There should be at least one described data. \
-	\nExample:\nvertex_buffer->SetDataTypes({ {0, DataType::Float3} });//layout location, data type");
+	assert(m_DescribedData.GetSize() > 0);
 	Bind();
 	for (const auto& description : m_DescribedData)
 	{

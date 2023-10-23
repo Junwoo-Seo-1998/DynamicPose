@@ -9,6 +9,7 @@ float Math::GetMaxElement(const glm::vec3& val)
 	return glm::max(glm::max(val.x, val.y), val.z);
 }
 
+
 bool Math::Decompose(const glm::mat4& transform, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale)
 {
 	glm::quat rot;

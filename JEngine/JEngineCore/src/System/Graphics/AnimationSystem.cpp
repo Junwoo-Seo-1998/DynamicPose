@@ -14,7 +14,7 @@ void AnimationSystem::RegisterSystem(flecs::world& _world)
 		});
 	_world.system<AnimatorComponent>("UpdateAnimationMatrix").kind(flecs::OnUpdate).iter([&](flecs::iter& iter, AnimatorComponent* animator)
 		{
-			for (int i: iter)
+			for (auto i: iter)
 			{
 				flecs::entity entity = iter.entity(i);
 				UpdateFinalBoneMatrices(entity, animator[i]);
@@ -24,7 +24,7 @@ void AnimationSystem::RegisterSystem(flecs::world& _world)
 
 void AnimationSystem::UpdateAnimation(flecs::iter& iter, AnimatorComponent* animator)
 {
-	for (int i:iter)
+	for (auto i:iter)
 	{
 		AnimatorComponent& animatorComp = animator[i];
 		if(animatorComp.CurrentAnimation)
@@ -43,29 +43,37 @@ void AnimationSystem::UpdateTransforms(flecs::entity entity, AnimatorComponent& 
 
 	if (auto iter = channels.find(entity.name().c_str()); iter != channels.end())
 	{
-		//std::cout << entity.name() << std::endl;
 		auto& channel = iter->second;
+		//Get index of keyframes based on current animation Time
 		int posIndex = channel.GetPositionIndex(currentTime);
 		int rotIndex = channel.GetRotationIndex(currentTime);
 		int scaleIndex = channel.GetScaleIndex(currentTime);
 		Transform* toUpdate = entity.get_mut<Transform>();
 
-		//Interpolation
+		//Interpolation Lerp, Slerp, Elerp
+
+		//Get Interpolation Factor
 		float posfactor=
 		Math::GetInterpolationFactor(channel.Positions[posIndex].timeStamp, channel.Positions[posIndex + 1].timeStamp, currentTime);
-		glm::vec3 finalPos = Math::Lerp(channel.Positions[posIndex].position, channel.Positions[posIndex+1].position
-			, posfactor);
-		toUpdate->Position = finalPos;
 
 		float rotfactor =
 			Math::GetInterpolationFactor(channel.Rotations[rotIndex].timeStamp, channel.Rotations[rotIndex + 1].timeStamp, currentTime);
-		glm::quat finalRot = Math::Slerp(channel.Rotations[rotIndex].Rotation, channel.Rotations[rotIndex + 1].Rotation
-			, rotfactor);
-		toUpdate->Rotation = finalRot;
+
 		float scalefactor =
 			Math::GetInterpolationFactor(channel.Scales[scaleIndex].timeStamp, channel.Scales[scaleIndex + 1].timeStamp, currentTime);
+
+		//Compute Interpolation when the time is located between [k, k+1] 
+		glm::vec3 finalPos = Math::Lerp(channel.Positions[posIndex].position, channel.Positions[posIndex+1].position
+			, posfactor);
+
+		glm::quat finalRot = Math::Slerp(channel.Rotations[rotIndex].Rotation, channel.Rotations[rotIndex + 1].Rotation
+			, rotfactor);
+
 		glm::vec3 finalScale = Math::Elerp(channel.Scales[scaleIndex].scale, channel.Scales[scaleIndex + 1].scale
 			, scalefactor);
+
+		toUpdate->Position = finalPos;
+		toUpdate->Rotation = finalRot;
 		toUpdate->Scale = finalScale;
 	}
 	entity.children([&](flecs::entity child)

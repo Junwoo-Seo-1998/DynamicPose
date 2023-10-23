@@ -15,17 +15,21 @@ void TransformSystem::RegisterSystem(flecs::world& _world)
 
 void TransformSystem::UpdateTransform(flecs::iter& iter, Transform* transform, Transform* p_transform)
 {
-	constexpr bool useVQS = true;
-	for (int i: iter) //breath first
+	//imgui option to toggle vqs
+	bool useVQS = iter.world().get<Config>()->UseVQS;
+	for (auto i: iter) //iter is sorted index with breath first search parent->child
 	{
 		Transform& transformComp = transform[i];
+
 		auto localVQS = VQS{
 			transformComp.Position,
-			transform->Rotation,
+			transformComp.Rotation,
 			Math::GetMaxElement(transformComp.Scale) //since vqs only support uniform scaling
 		};
-
+		//final transform matrix
 		glm::mat4 final;
+
+		//compute local
 		if (useVQS)
 		{
 			transformComp.FinalVQS = localVQS;
@@ -34,10 +38,11 @@ void TransformSystem::UpdateTransform(flecs::iter& iter, Transform* transform, T
 		else
 		{
 			final = glm::translate(glm::mat4(1.0f), transformComp.Position)
-				* glm::toMat4(glm::quat(transformComp.Rotation))
+				* glm::toMat4(transformComp.Rotation)
 				* glm::scale(glm::mat4(1.0f), transformComp.Scale);
 		}
 
+		//compute global matrix if they have parents
 		if (p_transform)
 		{
 			if (useVQS)

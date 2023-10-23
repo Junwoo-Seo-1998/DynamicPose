@@ -27,7 +27,7 @@ Model AssimpParser::ParseModel(const std::string& file_name)
 	return model;
 }
 
-std::shared_ptr<Animation> AssimpParser::ParseAnimation(const std::string& file_name)
+std::shared_ptr<Animation> AssimpParser::ParseAnimation(const std::string& file_name, int index)
 {
 	Assimp::Importer importer;
 	unsigned flags = aiProcess_Triangulate | aiProcess_FlipUVs;
@@ -38,16 +38,16 @@ std::shared_ptr<Animation> AssimpParser::ParseAnimation(const std::string& file_
 		return{};
 	}
 
-	aiAnimation* animation = scene->mAnimations[16];
+	aiAnimation* animation = scene->mAnimations[index];
 
 	std::shared_ptr<Animation> toReturn = std::make_shared<Animation>();
 	Animation& ani = *toReturn;
 
 	ani.AnimationName = animation->mName.C_Str();
-	ani.Duration = animation->mDuration;
-	ani.TicksPerSecond = animation->mTicksPerSecond;
+	ani.Duration = static_cast<float>(animation->mDuration);
+	ani.TicksPerSecond = static_cast<int>(animation->mTicksPerSecond);
 	
-	int size = animation->mNumChannels;
+	int size = static_cast<int>(animation->mNumChannels);
 	ani.Channels.reserve(size);
 	for (int i = 0; i < size; i++)
 	{
@@ -61,7 +61,7 @@ std::shared_ptr<Animation> AssimpParser::ParseAnimation(const std::string& file_
 		for (int positionIndex = 0; positionIndex < NumPostions; ++positionIndex)
 		{
 			aiVector3D aiPosition = channel->mPositionKeys[positionIndex].mValue;
-			float timeStamp = channel->mPositionKeys[positionIndex].mTime;
+			float timeStamp = static_cast<float>(channel->mPositionKeys[positionIndex].mTime);
 			KeyPosition data;
 			data.position = AssimpGLMHelpers::GetGLMVec(aiPosition);
 			data.timeStamp = timeStamp;
@@ -73,7 +73,7 @@ std::shared_ptr<Animation> AssimpParser::ParseAnimation(const std::string& file_
 		for (int rotationIndex = 0; rotationIndex < NumRotations; ++rotationIndex)
 		{
 			aiQuaternion aiOrientation = channel->mRotationKeys[rotationIndex].mValue;
-			float timeStamp = channel->mRotationKeys[rotationIndex].mTime;
+			float timeStamp = static_cast<float>(channel->mRotationKeys[rotationIndex].mTime);
 			KeyRotation data;
 			data.Rotation = AssimpGLMHelpers::GetGLMQuat(aiOrientation);
 			data.timeStamp = timeStamp;
@@ -85,7 +85,7 @@ std::shared_ptr<Animation> AssimpParser::ParseAnimation(const std::string& file_
 		for (int keyIndex = 0; keyIndex < NumScalings; ++keyIndex)
 		{
 			aiVector3D scale = channel->mScalingKeys[keyIndex].mValue;
-			float timeStamp = channel->mScalingKeys[keyIndex].mTime;
+			float timeStamp = static_cast<float>(channel->mScalingKeys[keyIndex].mTime);
 			KeyScale data;
 			data.scale = AssimpGLMHelpers::GetGLMVec(scale);
 			data.timeStamp = timeStamp;
@@ -97,6 +97,83 @@ std::shared_ptr<Animation> AssimpParser::ParseAnimation(const std::string& file_
 	}
 
 
+	return toReturn;
+}
+
+std::vector<std::shared_ptr<Animation>> AssimpParser::ParseAnimations(const std::string& file_name)
+{
+	Assimp::Importer importer;
+	unsigned flags = aiProcess_Triangulate | aiProcess_FlipUVs;
+	const aiScene* scene = importer.ReadFile(file_name, flags);
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+		return{};
+	}
+
+	std::vector<std::shared_ptr<Animation>> toReturn;
+	int Animations = scene->mNumAnimations;
+	toReturn.reserve(Animations);
+	for (int a=0; a<Animations; ++a)
+	{
+		aiAnimation* animation = scene->mAnimations[a];
+		std::shared_ptr<Animation> toAdd = std::make_shared<Animation>();
+		Animation& ani = *toAdd;
+
+		ani.AnimationName = animation->mName.C_Str();
+		ani.Duration = static_cast<float>(animation->mDuration);
+		ani.TicksPerSecond = static_cast<int>(animation->mTicksPerSecond);
+
+		int size = static_cast<int>(animation->mNumChannels);
+		ani.Channels.reserve(size);
+		for (int i = 0; i < size; i++)
+		{
+			aiNodeAnim* channel = animation->mChannels[i];
+			Channel channelStruct;
+			channelStruct.Name = channel->mNodeName.C_Str();
+
+			//parse data
+			int NumPostions = channel->mNumPositionKeys;
+			channelStruct.Positions.reserve(NumPostions);
+			for (int positionIndex = 0; positionIndex < NumPostions; ++positionIndex)
+			{
+				aiVector3D aiPosition = channel->mPositionKeys[positionIndex].mValue;
+				float timeStamp = static_cast<float>(channel->mPositionKeys[positionIndex].mTime);
+				KeyPosition data;
+				data.position = AssimpGLMHelpers::GetGLMVec(aiPosition);
+				data.timeStamp = timeStamp;
+				channelStruct.Positions.push_back(data);
+			}
+
+			int NumRotations = channel->mNumRotationKeys;
+			channelStruct.Rotations.reserve(NumRotations);
+			for (int rotationIndex = 0; rotationIndex < NumRotations; ++rotationIndex)
+			{
+				aiQuaternion aiOrientation = channel->mRotationKeys[rotationIndex].mValue;
+				float timeStamp = static_cast<float>(channel->mRotationKeys[rotationIndex].mTime);
+				KeyRotation data;
+				data.Rotation = AssimpGLMHelpers::GetGLMQuat(aiOrientation);
+				data.timeStamp = timeStamp;
+				channelStruct.Rotations.push_back(data);
+			}
+
+			int NumScalings = channel->mNumScalingKeys;
+			channelStruct.Scales.reserve(NumScalings);
+			for (int keyIndex = 0; keyIndex < NumScalings; ++keyIndex)
+			{
+				aiVector3D scale = channel->mScalingKeys[keyIndex].mValue;
+				float timeStamp = static_cast<float>(channel->mScalingKeys[keyIndex].mTime);
+				KeyScale data;
+				data.scale = AssimpGLMHelpers::GetGLMVec(scale);
+				data.timeStamp = timeStamp;
+				channelStruct.Scales.push_back(data);
+			}
+
+			ani.Channels.push_back(channelStruct);
+			ani.ChannelsMap[channelStruct.Name] = channelStruct;
+		}
+		toReturn.push_back(toAdd);
+	}
 	return toReturn;
 }
 
@@ -159,7 +236,7 @@ Mesh AssimpParser::ProcessMesh(const aiScene* scene, aiMesh* _mesh, std::map<std
 		//for bone id
 		int& boneCount = _BoneCounter;
 
-		for (int boneIndex = 0; boneIndex < _mesh->mNumBones; ++boneIndex)
+		for (int boneIndex = 0; boneIndex < static_cast<int>(_mesh->mNumBones); ++boneIndex)
 		{
 			//to be used later
 			int boneID = -1;

@@ -15,9 +15,9 @@ void SceneCamera::RegisterSystem(flecs::world& _world)
 
 void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 {
-	constexpr float MouseSensitivity =5.f;
+	constexpr float MouseSensitivity = 10.f;
 	constexpr float speed = 50.f;
-	for (int i: iter)
+	for (auto i: iter)
 	{
 		auto& camTransform = transform[i];
 		glm::vec3 movement{ 0,0,0 };
@@ -61,7 +61,7 @@ void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 			glm::vec3 rotation = glm::degrees(glm::eulerAngles(camTransform.Rotation));
 			float Pitch = rotation.x + y_offset;
 
-			//Pitch = glm::clamp(Pitch, glm::radians(-89.0f), glm::radians(89.0f));
+			Pitch = glm::clamp(Pitch, -89.0f, 89.0f);
 
 			rotation.x = Pitch;
 			rotation.y -= x_offset;
@@ -70,6 +70,8 @@ void SceneCamera::UpdateCamera(flecs::iter& iter, Transform* transform)
 		}
 
 		auto [width, height] = Application::Get().GetWindow()->GetWindowSize();
+		if(width<=0 || height<=0)
+			continue;
 		Application::Get().GetWorld().set<MainCamera>({ camTransform.Position,
 			glm::lookAt(camTransform.Position, camTransform.Position + camTransform.GetForward(), { 0.f,1.f,0.f }),
 			glm::perspective(glm::radians(60.f), (float)width/height, 0.01f, 1000.f)

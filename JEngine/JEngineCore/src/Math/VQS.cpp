@@ -2,10 +2,12 @@
 
 #include <glm/gtx/quaternion.hpp>
 
+#include "Util/Math.h"
+
 glm::vec3 VQS::operator*(const glm::vec3& right)
 {
-	auto res=q * (s * glm::quat{ 0, right }) * glm::inverse(q);
-	return glm::vec3(res.x, res.y, res.z) + v;
+	auto res = q * (s * glm::quat{ 0, right }) * glm::inverse(q);
+	return glm::vec3{ res.x,res.y,res.z } + v;
 }
 
 VQS VQS::operator*(const VQS& right)
@@ -16,7 +18,7 @@ VQS VQS::operator*(const VQS& right)
 glm::mat4 VQS::toMat() const
 {
 	return glm::translate(glm::mat4(1.0f), v)
-		* glm::toMat4(glm::quat(q))
+		* glm::toMat4(q)
 		* glm::scale(glm::mat4(1.0f), glm::vec3{ s });
 }
 

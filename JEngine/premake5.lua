@@ -54,7 +54,7 @@ project "JEngineCore"
     }
 
     disablewarnings {
-        "4819","4996","4005"
+        "4819","4996","4005","4098"
     }
     linkoptions {}
     includedirs
@@ -138,7 +138,7 @@ project "JEngine"
         
     disablewarnings
     {
-        "4819","4996","4005"
+        "4819","4996","4005","4098"
     }
     linkoptions {}
     includedirs

@@ -38,7 +38,9 @@ struct Channel
 			if (animationTime < Positions[index + 1].timeStamp)
 				return index;
 		}
+		//shouldn't happen
 		assert(0);
+		return -1;
 	}
 
 	int GetRotationIndex(float animationTime)
@@ -48,7 +50,9 @@ struct Channel
 			if (animationTime < Rotations[index + 1].timeStamp)
 				return index;
 		}
+		//shouldn't happen
 		assert(0);
+		return -1;
 	}
 
 	int GetScaleIndex(float animationTime)
@@ -58,7 +62,9 @@ struct Channel
 			if (animationTime < Scales[index + 1].timeStamp)
 				return index;
 		}
+		//shouldn't happen
 		assert(0);
+		return -1;
 	}
 };
 struct Animation

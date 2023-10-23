@@ -42,8 +42,8 @@ void DebugRenderer::BeginScene(const glm::mat4& viewProjection, const glm::vec3&
 void DebugRenderer::EndScene()
 {
 	vbo->BindToVertexArray();
-	vbo->SetData(toDraw.size() * sizeof(glm::vec3), toDraw.data());
-	glDrawArrays(GL_LINES, 0, toDraw.size());
+	vbo->SetData(static_cast<int>(toDraw.size()) * sizeof(glm::vec3), toDraw.data());
+	glDrawArrays(GL_LINES, 0, static_cast<int>(toDraw.size()));
 	toDraw.clear();
 }
 

@@ -34,6 +34,10 @@ bool GLFW::Init()
     glfwSetCursorPosCallback(m_Window.get(), Input::GLFWMousePositionCallback);
     glfwMakeContextCurrent(m_Window.get());
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
+    glfwSwapInterval(0);
+
+    return true;
 }
 
 void GLFW::Shutdown()
