@@ -167,10 +167,10 @@ project "JEngine"
         
     postbuildcommands 
     {
-        --"{COPYDIR} \"../RuntimeDependencies/\" \"../bin/%{cfg.buildcfg}/\"",
+        "{COPYDIR} \"../RuntimeDependencies/\" \"%{cfg.buildtarget.directory}\"",
     }
     
-    debugdir "RuntimeDependencies"
+    --debugdir "RuntimeDependencies"
     
     -- All of these settings will appear in the Debug configuration
     filter "configurations:Debug"

@@ -73,7 +73,8 @@
       <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /B /Y $(SolutionDir)\Libs\assimp\dbg\assimp-vc143-mtd.dll $(TargetDir)\assimp-vc143-mtd.dll</Command>
+      <Command>xcopy /Q /E /Y /I "..\RuntimeDependencies\" "$(TargetDir)"
+copy /B /Y $(SolutionDir)\Libs\assimp\dbg\assimp-vc143-mtd.dll $(TargetDir)\assimp-vc143-mtd.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release Win64|x64'">
@@ -99,7 +100,8 @@
       <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /B /Y $(SolutionDir)\Libs\assimp\rel\assimp-vc143-mt.dll $(TargetDir)\assimp-vc143-mt.dll</Command>
+      <Command>xcopy /Q /E /Y /I "..\RuntimeDependencies\" "$(TargetDir)"
+copy /B /Y $(SolutionDir)\Libs\assimp\rel\assimp-vc143-mt.dll $(TargetDir)\assimp-vc143-mt.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
