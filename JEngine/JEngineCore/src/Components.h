@@ -5,6 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Animation.h"
+#include "Math/SpaceCurve.h"
 #include "Math/VQS.h"
 
 struct Transform
@@ -33,6 +34,11 @@ struct Transform
 struct DebugBone
 {
 	bool placeholder;
+};
+
+struct MeshRenderer
+{
+	MeshInstance instance;
 };
 
 struct SkinnedMeshRenderer
@@ -70,4 +76,13 @@ struct BoneComponent
 {
 	int BoneMatrixID = -1;
 	glm::mat4 BoneOffset = glm::mat4(1.f);
+};
+
+
+struct PathComponent
+{
+	std::vector<glm::vec3>controlPoints;
+	float t = 0.0f;
+
+	std::vector<SpaceCurve> Curves;
 };

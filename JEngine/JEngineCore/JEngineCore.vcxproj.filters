@@ -88,6 +88,10 @@
     <ClInclude Include="src\Window\Window.h">
       <Filter>Window</Filter>
     </ClInclude>
+    <ClInclude Include="src\Math\SpaceCurve.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System\CurveSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
@@ -144,6 +148,12 @@
     </ClCompile>
     <ClCompile Include="src\Window\Window.cpp">
       <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\SpaceCurve.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\System\CurveSystem.cpp">
+      <Filter>System\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

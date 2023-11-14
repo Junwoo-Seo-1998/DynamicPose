@@ -15,11 +15,11 @@ static std::vector<glm::vec3> toDraw;
 void DebugRenderer::Init()
 {
 	vao = VertexArray::CreateVertexArray();
-	vbo = VertexBuffer::CreateVertexBuffer(sizeof(glm::vec3) * 2 * 100);
+	vbo = VertexBuffer::CreateVertexBuffer(sizeof(glm::vec3) * 2 * 10000);
 	vbo->SetDataTypes({
 		{0, DataType::Float3},
 		});
-	toDraw.reserve(100 * 2);
+	toDraw.reserve(10000 * 2);
 
 	ShaderSource source{};
 	source[ShaderType::VertexShader] = { "Shader/line.vert" };

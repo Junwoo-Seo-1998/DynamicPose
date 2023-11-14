@@ -103,6 +103,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Math\SpaceCurve.h" />
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\AssimpGLMHelpers.h" />
@@ -121,6 +122,7 @@
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Parser.h" />
     <ClInclude Include="src\Scene\Scene.h" />
+    <ClInclude Include="src\System\CurveSystem.h" />
     <ClInclude Include="src\System\DemoGUI.h" />
     <ClInclude Include="src\System\Graphics\AnimationSystem.h" />
     <ClInclude Include="src\System\Graphics\SceneCamera.h" />
@@ -133,6 +135,8 @@
     <ClInclude Include="src\Window\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\System\CurveSystem.cpp" />
+    <ClCompile Include="src\Math\SpaceCurve.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\Graphics\DebugRenderer.cpp" />

@@ -12,6 +12,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include "Application.h"
 #include "Graphics/DebugRenderer.h"
+#include "Math/SpaceCurve.h"
 #include "Util/Math.h"
 
 flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string& name)
@@ -66,7 +67,26 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
 
 	auto one=CreateModel(_world, model,"MainModel");
+	one.get_mut<Transform>()->Scale = { 0.01,0.01,0.01 };
 	one.set<AnimatorComponent>({ animationHandle[16], });
+
+	std::vector<glm::vec3> points =
+	{
+		{0.f,0.f,0.f},
+		{2.f,0.f,-3.f},
+		{5.f, 0.f, -2.f},
+		{6.f, 0.f, 0.f},
+		{5.5f, 0.f, 3.f},
+		{7.f, 0.f, 4.f},
+		{6.f, 0.f, 6.f},
+		{2.f, 0.f, 8.f},
+
+	};
+
+	one.set<PathComponent>({ points });
+
+
+
 
 	/*auto two = CreateModel(_world, model, "Model_2");
 	two.set<Transform>({ {100, 0, -100}, });
@@ -74,14 +94,25 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	_world.get_mut<Config>()->AnimationList = animationHandle;
 
-	_world.system<AnimatorComponent>("SkinnedMeshRenderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, AnimatorComponent* animator)
-	{
-		RenderSkinnedMesh(iter, animator);
-	});
-
 	_world.system<Transform, DebugBone>("Debug Bone Renderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, Transform* transform, DebugBone* bone)
 	{
 		DebugRender(iter, transform, bone);
+	});
+
+	_world.system<PathComponent>("Debug Path Renderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, PathComponent* path)
+	{
+		DebugRender(iter, path);
+	});
+
+	_world.system<MeshRenderer>("MeshRenderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, MeshRenderer* mesh)
+	{
+		RenderMesh(iter, mesh);
+	});
+
+
+	_world.system<AnimatorComponent>("SkinnedMeshRenderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, AnimatorComponent* animator)
+	{
+		RenderSkinnedMesh(iter, animator);
 	});
 
 	glEnable(GL_CULL_FACE);
@@ -107,6 +138,56 @@ void SceneRenderer::DebugRender(flecs::iter& iter, Transform* transform, DebugBo
 		}
 	}
 	DebugRenderer::EndScene();
+}
+
+void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
+{
+	glDisable(GL_DEPTH_TEST);
+	DebugRenderer::BeginScene(Application::Get().GetWorld().get<MainCamera>()->projection
+		* Application::Get().GetWorld().get<MainCamera>()->view, { 1.f,1.f,0.f });
+	for (auto i : iter)
+	{
+		for (auto& curve: path[i].Curves)
+		{
+			float step = 30.f;
+			float t_inc = 1.f / step;
+
+			glm::vec3 p1 = curve.Compute(0.f);
+			for (float t = t_inc; t < 1.f; t += t_inc)
+			{
+				auto p2 = curve.Compute(t);
+				DebugRenderer::DrawLine(p1, p2);
+				p1 = p2;
+			}
+			DebugRenderer::DrawLine(p1, curve.Compute(1.f));
+		}
+	}
+	DebugRenderer::EndScene();
+
+
+	DebugRenderer::BeginScene(Application::Get().GetWorld().get<MainCamera>()->projection
+		* Application::Get().GetWorld().get<MainCamera>()->view, { 0.5f,0.0f,0.0f });
+	for (auto i : iter)
+	{
+		auto& controlPoints = path[i].controlPoints;
+		int numOfPoints = static_cast<int>(controlPoints.size());
+		if (numOfPoints <= 1)
+			continue;
+		glm::vec3 p1 = controlPoints[0];
+		for (int p_index = 1; p_index < numOfPoints; ++p_index)
+		{
+			glm::vec3 p2 = controlPoints[p_index];
+			DebugRenderer::DrawLine(p1, p2);
+			p1 = p2;
+		}
+	}
+	DebugRenderer::EndScene();
+}
+
+
+void SceneRenderer::RenderMesh(flecs::iter& iter, MeshRenderer* mesh)
+{
+	glEnable(GL_DEPTH_TEST);
 }
 
 void SceneRenderer::RenderSkinnedMesh(flecs::iter& iter, AnimatorComponent* animator)

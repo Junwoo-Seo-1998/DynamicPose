@@ -6,7 +6,6 @@
 #include "Components.h"
 void SceneViewer::RegisterSystem(flecs::world& _world)
 {
-
 	_world.system<Transform>("SceneViewer").kind(flecs::OnStore).iter([&](flecs::iter iter)
 	{
 		RenderSceneGUI(iter);

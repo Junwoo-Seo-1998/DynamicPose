@@ -12,6 +12,7 @@
 
 #include "GLFW/glfw3.h"
 #include "Graphics/DebugRenderer.h"
+#include "System/CurveSystem.h"
 #include "System/DemoGUI.h"
 #include "System/TransformSystem.h"
 #include "System/Graphics/AnimationSystem.h"
@@ -56,12 +57,13 @@ int Application::Run()
 	//register systems
 	m_World.add<Config>();
 	m_World.add<MainCamera>();
-	m_World.entity("MainCamera").set<Transform>({ {0.f,200.f,200.f}, 
+	m_World.entity("MainCamera").set<Transform>({ {0.f,2.f,2.f}, 
 		glm::quat(glm::radians(glm::vec3(-30.f, 0.f, 0.f))),
 	}).add<Camera>();
 
 	AddSystem<TransformSystem>();
 	AddSystem<AnimationSystem>();
+	AddSystem<CurveSystem>();
 	AddSystem<SceneCamera>();
 	AddSystem<SceneRenderer>();
 	AddSystem<SceneViewer>();
