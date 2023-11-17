@@ -66,10 +66,24 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 	{
 		auto& pathComp = path[i];
 
-		for (auto& curve: pathComp.Curves)
+		/*for (auto& curve: pathComp.Curves)
 		{
-			//auto& COI = curve.Compute(pathComp.t+)
-		}
+			float coi_t = pathComp.t + 0.01f;
+			glm::vec3 coi = (coi_t >= 1.f) ? curve.GetEndTangent() : curve.Compute(coi_t);
+
+
+			auto owner = iter.entity(i);
+		}*/
+		auto owner = iter.entity(i);
+
+		owner.get_mut<Transform>()->Position = pathComp.Curves[0].Compute(pathComp.t);
+
+		glm::vec3 coi = pathComp.Curves[0].Compute(pathComp.t + 0.001f);
+		glm::vec3 w = glm::normalize(coi - owner.get_mut<Transform>()->Position);
+		glm::vec3 u = glm::normalize(glm::cross(glm::vec3{ 0.f,1.f,0.f }, w));
+		glm::vec3 v = glm::normalize(glm::cross(w, u));
+
+		owner.get_mut<Transform>()->Rotation = glm::toQuat(glm::mat3{ u, v, w });
 
 		//update t
 		pathComp.t += iter.delta_time();
