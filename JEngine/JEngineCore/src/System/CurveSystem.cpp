@@ -1,6 +1,9 @@
 #include "CurveSystem.h"
 
+#include <iostream>
+
 #include "Components.h"
+#include "Math/DistanceTime.h"
 
 void CurveSystem::RegisterSystem(flecs::world& _world)
 {
@@ -54,31 +57,60 @@ void CurveSystem::OnChange(PathComponent& _path)
 		b.push_back(controlPoints[numOfPoints - 1] - h);
 	}
 
+
+
 	for (int i = 0; i < numOfPoints - 1; ++i)
 	{
 		_path.Curves.emplace_back(SpaceCurve{ controlPoints[i], a[i], b[i + 1], controlPoints[i + 1] });
+
 	}
+
+	
+	//update table
+	float prev = 0.f;
+
+	_path.PreComputedPoints.clear();
+	_path.CurveLength.clear();
+	_path.InverseValues.clear();
+
+	float numOfCurves = static_cast<float>(numOfPoints) - 1.f;
+	for (auto& curve:_path.Curves)
+	{
+		auto& points = curve.GetPreComputedPoints();
+		auto& arcLens = curve.GetCurveLength();
+		auto& UValues = curve.GetInverseValues();
+		int size = arcLens.size();
+		for (int i=0; i<size; ++i)
+		{
+			_path.PreComputedPoints.push_back(points[i]);
+			_path.CurveLength.push_back((prev + arcLens[i]) / numOfCurves);
+			_path.InverseValues.push_back((prev + UValues[i]) / numOfCurves);
+		}
+		prev += 1.f;
+	}
+
+	
 }
 
 void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 {
+	static Parabolic distance_time{0.2f, 0.8f };
 	for (auto i: iter)
 	{
 		auto& pathComp = path[i];
-
-		/*for (auto& curve: pathComp.Curves)
-		{
-			float coi_t = pathComp.t + 0.01f;
-			glm::vec3 coi = (coi_t >= 1.f) ? curve.GetEndTangent() : curve.Compute(coi_t);
-
-
-			auto owner = iter.entity(i);
-		}*/
 		auto owner = iter.entity(i);
 
-		owner.get_mut<Transform>()->Position = pathComp.Curves[0].Compute(pathComp.t);
+		float arcLen = distance_time.GetDistance(pathComp.t);
+		//std::cout << "arc len:" << arcLen << std::endl;
+		float U = pathComp.GetInverse(arcLen);
+		owner.get_mut<Transform>()->Position = pathComp.GetPoint(U);
 
-		glm::vec3 coi = pathComp.Curves[0].Compute(pathComp.t + 0.001f);
+		//to avoid getting coi at the end of the curve
+		glm::vec3 coi;
+		if ((U + 0.001f) > 1.f)
+			coi = owner.get_mut<Transform>()->Position + pathComp.Curves[pathComp.Curves.size() - 1].GetTangent(1.f);
+		else
+			coi = pathComp.GetPoint(U + 0.001f);
 		glm::vec3 w = glm::normalize(coi - owner.get_mut<Transform>()->Position);
 		glm::vec3 u = glm::normalize(glm::cross(glm::vec3{ 0.f,1.f,0.f }, w));
 		glm::vec3 v = glm::normalize(glm::cross(w, u));
@@ -86,9 +118,8 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 		owner.get_mut<Transform>()->Rotation = glm::toQuat(glm::mat3{ u, v, w });
 
 		//update t
-		pathComp.t += iter.delta_time();
-		//todo: change after testing
-		const float to_clamp = 1.f;
+		pathComp.t += iter.delta_time()*(1.f/8.f);
+		constexpr float to_clamp = 1.f;
 		if (pathComp.t >= to_clamp)
 		{
 			pathComp.t -= to_clamp;

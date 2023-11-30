@@ -92,6 +92,7 @@
       <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="src\System\CurveSystem.h" />
+    <ClInclude Include="src\Math\DistanceTime.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
@@ -155,5 +156,6 @@
     <ClCompile Include="src\System\CurveSystem.cpp">
       <Filter>System\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Math\DistanceTime.cpp" />
   </ItemGroup>
 </Project>

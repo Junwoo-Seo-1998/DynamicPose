@@ -103,6 +103,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Math\DistanceTime.h" />
     <ClInclude Include="src\Math\SpaceCurve.h" />
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\Application.h" />
@@ -135,6 +136,7 @@
     <ClInclude Include="src\Window\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Math\DistanceTime.cpp" />
     <ClCompile Include="src\System\CurveSystem.cpp" />
     <ClCompile Include="src\Math\SpaceCurve.cpp" />
     <ClCompile Include="src\Application.cpp" />
