@@ -71,6 +71,7 @@ void CurveSystem::OnChange(PathComponent& _path)
 	float prev = 0.f;
 
 	_path.PreComputedPoints.clear();
+	_path.UValues.clear();
 	_path.CurveLength.clear();
 	_path.InverseValues.clear();
 
@@ -78,14 +79,21 @@ void CurveSystem::OnChange(PathComponent& _path)
 	for (auto& curve:_path.Curves)
 	{
 		auto& points = curve.GetPreComputedPoints();
-		auto& arcLens = curve.GetCurveLength();
-		auto& UValues = curve.GetInverseValues();
-		int size = arcLens.size();
-		for (int i=0; i<size; ++i)
+		auto& UValues = curve.GetUValues();
+		int size = static_cast<int>(points.size());
+		for (int i = 0; i < size; ++i)
 		{
 			_path.PreComputedPoints.push_back(points[i]);
+			_path.UValues.push_back((prev + UValues[i]) / endLength); //normalize
+		}
+
+		auto& arcLens = curve.GetCurveLength();
+		auto& inverseValues = curve.GetInverseValues();
+		size = static_cast<int>(arcLens.size());
+		for (int i=0; i<size; ++i)
+		{
 			_path.CurveLength.push_back((prev + arcLens[i]) / endLength); //normalize 
-			_path.InverseValues.push_back((prev + UValues[i]) / endLength); //normalize
+			_path.InverseValues.push_back((prev + inverseValues[i]) / endLength); //normalize
 		}
 		prev += 1.f;
 	}

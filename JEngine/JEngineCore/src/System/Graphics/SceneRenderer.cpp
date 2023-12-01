@@ -95,9 +95,10 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		{5.5f, 0.f, 3.f},
 		{7.f, 0.f, 4.f},
 		{6.f, 0.f, 6.f},
-		{4.f, 0.f, 3.f},
+		{4.f, 0.f, 5.f},
 		{2.f, 0.f, 4.f},
 	};
+
 
 	one.set<PathComponent>({ points });
 
@@ -139,7 +140,7 @@ void SceneRenderer::DebugRender(flecs::iter& iter, Transform* transform, DebugBo
 	if(!iter.world().get<Config>()->ShowSkeleton)
 		return;
 	glDisable(GL_DEPTH_TEST);
-	DebugRenderer::BeginScene(Application::Get().GetWorld().get<MainCamera>()->projection
+	DebugRenderer::BeginDrawLine(Application::Get().GetWorld().get<MainCamera>()->projection
 		* Application::Get().GetWorld().get<MainCamera>()->view, { 0.f,1.f,0.f });
 	for(auto i: iter)
 	{
@@ -151,14 +152,15 @@ void SceneRenderer::DebugRender(flecs::iter& iter, Transform* transform, DebugBo
 			DebugRenderer::DrawLine(p1, p2);
 		}
 	}
-	DebugRenderer::EndScene();
+	DebugRenderer::EndDrawLine();
 }
 
 void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 {
 	glDisable(GL_DEPTH_TEST);
-	DebugRenderer::BeginScene(Application::Get().GetWorld().get<MainCamera>()->projection
-		* Application::Get().GetWorld().get<MainCamera>()->view, { 1.f,1.f,0.f });
+	glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+		* Application::Get().GetWorld().get<MainCamera>()->view;
+	DebugRenderer::BeginDrawLine(viewProj, { 1.f,1.f,0.f });
 	for (auto i : iter)
 	{
 		for (auto& curve: path[i].Curves)
@@ -176,10 +178,19 @@ void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 			DebugRenderer::DrawLine(p1, curve.GetPoint(1.f));
 		}
 	}
-	DebugRenderer::EndScene();
+	DebugRenderer::EndDrawLine();
 
+	DebugRenderer::SetViewProjection(viewProj);
+	for (auto i : iter)
+	{
+		auto& controlPoints = path[i].controlPoints;
+		for (auto& p:controlPoints)
+		{
+			DebugRenderer::DrawSphere(p, 0.1f, { 1.f,0.f,0.f });
+		}
+	}
 
-	DebugRenderer::BeginScene(Application::Get().GetWorld().get<MainCamera>()->projection
+	/*DebugRenderer::BeginDrawLine(Application::Get().GetWorld().get<MainCamera>()->projection
 		* Application::Get().GetWorld().get<MainCamera>()->view, { 0.5f,0.0f,0.0f });
 	for (auto i : iter)
 	{
@@ -195,7 +206,7 @@ void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 			p1 = p2;
 		}
 	}
-	DebugRenderer::EndScene();
+	DebugRenderer::EndDrawLine();*/
 }
 
 

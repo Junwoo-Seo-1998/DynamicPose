@@ -21,7 +21,7 @@ class MeshInstance
 {
 public:
     MeshInstance() = default;
-    MeshInstance(Mesh& mesh);
+    MeshInstance(const Mesh& mesh);
 
     std::shared_ptr<VertexBuffer> m_Buffer;
     std::shared_ptr<IndexBuffer> m_IndexBuffer;

@@ -74,3 +74,81 @@ glm::vec3 Math::Elerp(const glm::vec3& start, const glm::vec3& end, float factor
 
 	return { x,y,z };
 }
+
+Mesh Math::GenerateSpherePointsWithIndices(float radius, int segments, int rings)
+{
+	Mesh sphere;
+	//clamp
+	segments = std::max(segments, 3);
+	rings = std::max(rings, 3);
+	constexpr float pi = glm::pi<float>();
+
+	std::vector<Vertex>& points = sphere.vertices;
+	float theta_step = pi / static_cast<float>(rings);
+	float p_step = 2.f * pi / static_cast<float>(segments);
+
+	float theta = theta_step;
+	for (int ring = 1; ring < rings; ++ring)
+	{
+		float ring_rad = radius * std::sin(theta);
+		float p = 0.f;
+		for (int segment = 0; segment < segments; ++segment)
+		{
+			points.push_back({ glm::vec3{ ring_rad * glm::sin(p),radius * std::cos(theta) , ring_rad * glm::cos(p) }, });
+			p += p_step;
+		}
+		theta += theta_step;
+	}
+
+	std::vector<unsigned int>& indices = sphere.indices;
+	int sides = rings - 2; //- top and bottom
+	for (int side = 0; side < sides; ++side)
+	{
+		int current_circle = side * segments;
+		int next_circle = (side + 1) * segments;
+		for (int segment = 0; segment < segments; ++segment)
+		{
+			//triangle 1
+			//*
+			//**
+			indices.push_back(current_circle + segment);
+			indices.push_back(next_circle + segment);
+			indices.push_back(next_circle + (segment + 1) % segments);
+
+			//triangle 2
+			//**
+			// *
+			indices.push_back(current_circle + segment);
+			indices.push_back(next_circle + (segment + 1) % segments);
+			indices.push_back(current_circle + (segment + 1) % segments);
+		}
+	}
+
+
+	//top
+	points.push_back({ glm::vec3{ 0.f,radius,0.f }, });
+	int	top_index = static_cast<int>(points.size() - 1);
+	for (int segment = 0; segment < segments; ++segment)
+	{
+		//triangle 1
+		//*  top
+		//** first circle
+		indices.push_back(top_index);
+		indices.push_back(segment % segments);
+		indices.push_back((segment + 1) % segments);
+	}
+	//bottom
+	int last_circle = sides * segments;
+	points.push_back({ glm::vec3{ 0.f,-radius,0.f }, });
+	int	bottom_index = static_cast<int>(points.size() - 1);
+	for (int segment = 0; segment < segments; ++segment)
+	{
+		//triangle
+		//** last_circle
+		// * bottom
+		indices.push_back(last_circle + segment % segments);
+		indices.push_back(bottom_index);
+		indices.push_back(last_circle + (segment + 1) % segments);
+	}
+	return sphere;
+}
