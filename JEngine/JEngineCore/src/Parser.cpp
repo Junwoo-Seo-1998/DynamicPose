@@ -183,6 +183,7 @@ ModelNode AssimpParser::ProcessNode(const aiScene* scene, aiNode* node, std::map
 	ModelNode model;
 	model.name = node->mName.data;
 	model.nodeToParent = AssimpGLMHelpers::ConvertMatrixToGLMFormat(node->mTransformation);
+
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
@@ -228,7 +229,6 @@ Mesh AssimpParser::ProcessMesh(const aiScene* scene, aiMesh* _mesh, std::map<std
 		mesh.indices.emplace_back(_mesh->mFaces[f].mIndices[1]);
 		mesh.indices.emplace_back(_mesh->mFaces[f].mIndices[2]);
 	}
-
 	//ExtractBoneWeightForVertices
 	{
 		auto& boneInfoMap = _BoneInfoMap;
@@ -236,7 +236,10 @@ Mesh AssimpParser::ProcessMesh(const aiScene* scene, aiMesh* _mesh, std::map<std
 		//for bone id
 		int& boneCount = _BoneCounter;
 
-		for (int boneIndex = 0; boneIndex < static_cast<int>(_mesh->mNumBones); ++boneIndex)
+		int numBones = static_cast<int>(_mesh->mNumBones);
+		mesh.skinned = numBones > 0;
+
+		for (int boneIndex = 0; boneIndex < numBones; ++boneIndex)
 		{
 			//to be used later
 			int boneID = -1;

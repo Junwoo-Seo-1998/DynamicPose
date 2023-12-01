@@ -36,7 +36,10 @@ flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string
 			{
 				for(auto m:model.meshes)
 				{
-					_world.entity().child_of(obj).add<Transform>().set<SkinnedMeshRenderer>({ m });
+					if(m.skinned)
+						_world.entity().child_of(obj).add<Transform>().set<SkinnedMeshRenderer>({ m });
+					else
+						_world.entity().child_of(obj).add<Transform>().set<MeshRenderer>({ m });
 				}
 			}
 			else
@@ -58,10 +61,20 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 {
 	m_VertexArray = VertexArray::CreateVertexArray();
 	//testing
-	ShaderSource source{};
-	source[ShaderType::VertexShader] = { "Shader/simple.vert" };
-	source[ShaderType::FragmentShader] = {"Shader/simple.frag"};
-	m_RenderShader = Shader::CreateShaderFromFile(source);
+	{
+		ShaderSource source{};
+		source[ShaderType::VertexShader] = { "Shader/simple.vert" };
+		source[ShaderType::FragmentShader] = { "Shader/simple.frag" };
+		m_RenderShader = Shader::CreateShaderFromFile(source);
+	}
+
+	{
+		ShaderSource source{};
+		source[ShaderType::VertexShader] = { "Shader/simpleMesh.vert" };
+		source[ShaderType::FragmentShader] = { "Shader/simpleMesh.frag" };
+		m_MeshRenderShader = Shader::CreateShaderFromFile(source);
+	}
+
 
 	Model model = AssimpParser::ParseModel("Medieval.fbx");
 	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
@@ -84,8 +97,6 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	};
 
 	one.set<PathComponent>({ points });
-
-
 
 
 	/*auto two = CreateModel(_world, model, "Model_2");
@@ -188,6 +199,22 @@ void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 void SceneRenderer::RenderMesh(flecs::iter& iter, MeshRenderer* mesh)
 {
 	glEnable(GL_DEPTH_TEST);
+	m_VertexArray->Bind();
+	m_MeshRenderShader->Use();
+	m_MeshRenderShader->SetFloat3("CamPos", Application::Get().GetWorld().get<MainCamera>()->position);
+	m_MeshRenderShader->SetMat4("Matrix.View", Application::Get().GetWorld().get<MainCamera>()->view);
+	m_MeshRenderShader->SetMat4("Matrix.Projection", Application::Get().GetWorld().get<MainCamera>()->projection);
+	m_MeshRenderShader->SetFloat4("Color", glm::vec4{ 1.f });
+
+	for (auto i : iter)
+	{
+		auto entity = iter.entity(i);
+		m_MeshRenderShader->SetMat4("Matrix.Model", entity.get<Transform>()->FinalTransformMatrix);
+		MeshRenderer& renderer = mesh[i];
+		renderer.instance.m_Buffer->BindToVertexArray();
+		renderer.instance.m_IndexBuffer->BindToVertexArray();
+		glDrawElements(GL_TRIANGLES, renderer.instance.m_IndexBuffer->GetSize(), GL_UNSIGNED_INT, nullptr);
+	}
 }
 
 void SceneRenderer::RenderSkinnedMesh(flecs::iter& iter, AnimatorComponent* animator)

@@ -21,4 +21,5 @@ private:
 
 	std::shared_ptr<VertexArray> m_VertexArray;
 	std::shared_ptr<Shader> m_RenderShader;
+	std::shared_ptr<Shader> m_MeshRenderShader;
 };

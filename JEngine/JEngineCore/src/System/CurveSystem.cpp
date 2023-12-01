@@ -22,6 +22,8 @@ void CurveSystem::RegisterSystem(flecs::world& _world)
 void CurveSystem::OnChange(PathComponent& _path)
 {
 	_path.Curves.clear();
+
+	//the insertion of Bezier control points algorithm 
 	auto& controlPoints = _path.controlPoints;
 	int numOfPoints = static_cast<int>(controlPoints.size());
 	if (numOfPoints <= 1)
@@ -39,6 +41,7 @@ void CurveSystem::OnChange(PathComponent& _path)
 
 	_path.Curves.reserve(numOfPoints - 1);
 
+	//compute a and b for inserting
 	std::vector<glm::vec3> a, b;
 	{
 		auto h = (controlPoints[1] - controlPoints[numOfPoints - 1]) / 4.f;
@@ -57,23 +60,21 @@ void CurveSystem::OnChange(PathComponent& _path)
 		b.push_back(controlPoints[numOfPoints - 1] - h);
 	}
 
-
-
+	//generate each curve
 	for (int i = 0; i < numOfPoints - 1; ++i)
 	{
 		_path.Curves.emplace_back(SpaceCurve{ controlPoints[i], a[i], b[i + 1], controlPoints[i + 1] });
-
 	}
 
 	
-	//update table
+	//merge table
 	float prev = 0.f;
 
 	_path.PreComputedPoints.clear();
 	_path.CurveLength.clear();
 	_path.InverseValues.clear();
 
-	float numOfCurves = static_cast<float>(numOfPoints) - 1.f;
+	float endLength = static_cast<float>(numOfPoints) - 1.f;
 	for (auto& curve:_path.Curves)
 	{
 		auto& points = curve.GetPreComputedPoints();
@@ -83,13 +84,11 @@ void CurveSystem::OnChange(PathComponent& _path)
 		for (int i=0; i<size; ++i)
 		{
 			_path.PreComputedPoints.push_back(points[i]);
-			_path.CurveLength.push_back((prev + arcLens[i]) / numOfCurves);
-			_path.InverseValues.push_back((prev + UValues[i]) / numOfCurves);
+			_path.CurveLength.push_back((prev + arcLens[i]) / endLength); //normalize 
+			_path.InverseValues.push_back((prev + UValues[i]) / endLength); //normalize
 		}
 		prev += 1.f;
 	}
-
-	
 }
 
 void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
@@ -99,6 +98,7 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 	{
 		auto& pathComp = path[i];
 		auto owner = iter.entity(i);
+
 		//sync speed with animation
 		if(owner.has<AnimatorComponent>())
 		{
@@ -109,11 +109,14 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 			animator->NumOfCyclePerSec = NumOfCyclePerSec;
 		}
 
+		//get arc length from distance time function
 		float arcLen = distance_time.GetDistance(pathComp.t);
+		//get U value to find position (for inverse function)
 		float U = pathComp.GetInverse(arcLen);
+		//get position
 		owner.get_mut<Transform>()->Position = pathComp.GetPoint(U);
 
-		
+		//center of interest part
 		glm::vec3 coi;
 		float small = std::numeric_limits<float>::epsilon() * 10.f;
 		//to avoid getting coi at the end of the curve
@@ -121,14 +124,17 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 			coi = owner.get_mut<Transform>()->Position + pathComp.Curves[pathComp.Curves.size() - 1].GetTangent(1.f);
 		else
 			coi = pathComp.GetPoint(U + small);
+
 		glm::vec3 w = glm::normalize(coi - owner.get_mut<Transform>()->Position);
 		glm::vec3 u = glm::normalize(glm::cross(glm::vec3{ 0.f,1.f,0.f }, w));
 		glm::vec3 v = glm::normalize(glm::cross(w, u));
 
+		//glm::mat3{ u, v, w } final coi matrix
 		owner.get_mut<Transform>()->Rotation = glm::toQuat(glm::mat3{ u, v, w });
 
-		//update t
-		pathComp.t += iter.delta_time()*(1.f/8.f);
+
+		//update t and clamp
+		pathComp.t += iter.delta_time()*(1.f/8.f); //8sec will take to traverse
 		constexpr float to_clamp = 1.f;
 		if (pathComp.t >= to_clamp)
 		{

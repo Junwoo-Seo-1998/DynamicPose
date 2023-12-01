@@ -13,6 +13,7 @@ public:
     std::string name;
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;
+    bool skinned = false;
 };
 
 

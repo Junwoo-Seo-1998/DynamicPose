@@ -18,6 +18,7 @@ SpaceCurve::SpaceCurve(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3
 	float total_len = 0.0f;
 	auto current = ComputeInner(t);
 
+	//creating table
 	for (int i = 0; i < segments-1; ++i)
 	{
 		auto prev = current;
@@ -41,6 +42,7 @@ SpaceCurve::SpaceCurve(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3
 	InverseValues.push_back(1.0f);
 	CurveLength.push_back(total_len);
 
+	//normalize
 	for (auto& len:CurveLength)
 	{
 		len /= total_len;
@@ -89,6 +91,7 @@ glm::vec3 SpaceCurve::ComputeInner(float t)
 
 float SpaceCurve::GetInverse(float length)
 {
+	//binary search
 	int start = 0, end = CurveLength.size() - 1;
 
 	while (start <= end)
@@ -110,7 +113,7 @@ float SpaceCurve::GetInverse(float length)
 		}
 	}
 
-	//couldn't find specific value
+	//if we couldn't find exact value have to find then we should interpolate
 	if(start>end)
 	{
 		std::swap(start, end);
