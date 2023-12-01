@@ -29,7 +29,12 @@ void AnimationSystem::UpdateAnimation(flecs::iter& iter, AnimatorComponent* anim
 		AnimatorComponent& animatorComp = animator[i];
 		if(animatorComp.CurrentAnimation)
 		{
-			animatorComp.CurrentTime += animatorComp.CurrentAnimation->TicksPerSecond * iter.delta_time();
+			float ticksPerSec = animatorComp.CurrentAnimation->TicksPerSecond;
+			if(animatorComp.NumOfCyclePerSec!=0.f)
+			{
+				ticksPerSec = animatorComp.CurrentAnimation->Duration * animatorComp.NumOfCyclePerSec;
+			}
+			animatorComp.CurrentTime += ticksPerSec * iter.delta_time();
 			animatorComp.CurrentTime = fmod(animatorComp.CurrentTime, animatorComp.CurrentAnimation->Duration);
 			flecs::entity entity = iter.entity(i);
 			UpdateTransforms(entity, animator[i], animatorComp.CurrentTime);

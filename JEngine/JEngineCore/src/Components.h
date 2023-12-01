@@ -5,7 +5,9 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Animation.h"
+#include "Math/SpaceCurve.h"
 #include "Math/VQS.h"
+#include "Util/Math.h"
 
 struct Transform
 {
@@ -33,6 +35,11 @@ struct Transform
 struct DebugBone
 {
 	bool placeholder;
+};
+
+struct MeshRenderer
+{
+	MeshInstance instance;
 };
 
 struct SkinnedMeshRenderer
@@ -64,10 +71,92 @@ struct AnimatorComponent
 	std::shared_ptr<Animation> CurrentAnimation;
 	std::vector<glm::mat4> FinalBoneMatrices{ 100, glm::mat4(1.f) };
 	float CurrentTime = 0.f;
+	//if -1.f then use origin
+	float NumOfCyclePerSec = 0.f;
 };
 
 struct BoneComponent
 {
 	int BoneMatrixID = -1;
 	glm::mat4 BoneOffset = glm::mat4(1.f);
+};
+
+
+struct PathComponent
+{
+	std::vector<glm::vec3>controlPoints;
+	float t = 0.0f;
+
+	std::vector<SpaceCurve> Curves;
+
+	//merged table
+	std::vector<glm::vec3> PreComputedPoints;
+	std::vector<float>CurveLength;
+	std::vector<float>InverseValues;
+
+	glm::vec3 GetPoint(float t)
+	{
+		int start = 0, end = InverseValues.size() - 1;
+
+		while (start <= end)
+		{
+			int middle = (start + end) / 2;
+
+			auto& toComp = InverseValues[middle];
+			if (t == toComp)
+			{
+				return PreComputedPoints[middle];
+			}
+			else if (t > toComp)
+			{
+				start = middle + 1;
+			}
+			else
+			{
+				end = middle - 1;
+			}
+		}
+
+		//couldn't find specific value
+		if (start > end)
+		{
+			std::swap(start, end);
+		}
+		//interpolate
+		float interpolationFactor = (t - InverseValues[start]) / (InverseValues[end] - InverseValues[start]);
+		return Math::Lerp <glm::vec3>(PreComputedPoints[start], PreComputedPoints[end], interpolationFactor);
+	}
+
+	float GetInverse(float length)
+	{
+		int start = 0, end = CurveLength.size() - 1;
+
+		while (start <= end)
+		{
+			int middle = (start + end) / 2;
+
+			auto& toComp = CurveLength[middle];
+			if (length == toComp)
+			{
+				return InverseValues[middle];
+			}
+			else if (length > toComp)
+			{
+				start = middle + 1;
+			}
+			else //if(length<toComp)
+			{
+				end = middle - 1;
+			}
+		}
+
+		//couldn't find specific value
+		if (start > end)
+		{
+			std::swap(start, end);
+		}
+		//interpolate
+		float interpolationFactor = (length - CurveLength[start]) / (CurveLength[end] - CurveLength[start]);
+		return Math::Lerp<float>(InverseValues[start], InverseValues[end], interpolationFactor);
+	}
 };

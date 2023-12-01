@@ -70,6 +70,7 @@ struct Channel
 struct Animation
 {
 	std::string AnimationName;
+	//in ticks 
 	float Duration;
 	int TicksPerSecond;
 	std::vector<Channel> Channels;
