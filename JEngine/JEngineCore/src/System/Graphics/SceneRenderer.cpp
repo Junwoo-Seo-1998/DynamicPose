@@ -75,12 +75,15 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		m_MeshRenderShader = Shader::CreateShaderFromFile(source);
 	}
 
+	Model plane=AssimpParser::ParseModel("Plane.fbx");
+	auto planeEntity  = CreateModel(_world, plane, "PlaneObj");
+	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };
 
 	Model model = AssimpParser::ParseModel("Medieval.fbx");
 	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
 
 	auto one=CreateModel(_world, model,"MainModel");
-	one.get_mut<Transform>()->Scale = { 0.01,0.01,0.01 };
+	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
 	one.set<AnimatorComponent>({ animationHandle[16], });
 
 	std::vector<glm::vec3> points =
