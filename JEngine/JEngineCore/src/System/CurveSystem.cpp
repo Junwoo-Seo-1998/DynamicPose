@@ -1,7 +1,7 @@
 #include "CurveSystem.h"
 
 #include <iostream>
-
+#include <limits>
 #include "Components.h"
 #include "Math/DistanceTime.h"
 
@@ -94,23 +94,33 @@ void CurveSystem::OnChange(PathComponent& _path)
 
 void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 {
-	static Parabolic distance_time{0.2f, 0.8f };
+	static Parabolic distance_time{0.3f, 0.7f };
 	for (auto i: iter)
 	{
 		auto& pathComp = path[i];
 		auto owner = iter.entity(i);
+		//sync speed with animation
+		if(owner.has<AnimatorComponent>())
+		{
+			AnimatorComponent* animator=owner.get_mut<AnimatorComponent>();
+			//compute NumOfCyclePerSec
+			float P = 1.f;
+			float NumOfCyclePerSec = distance_time.GetSpeed(pathComp.t) / P;
+			animator->NumOfCyclePerSec = NumOfCyclePerSec;
+		}
 
 		float arcLen = distance_time.GetDistance(pathComp.t);
-		//std::cout << "arc len:" << arcLen << std::endl;
 		float U = pathComp.GetInverse(arcLen);
 		owner.get_mut<Transform>()->Position = pathComp.GetPoint(U);
 
-		//to avoid getting coi at the end of the curve
+		
 		glm::vec3 coi;
-		if ((U + 0.001f) > 1.f)
+		float small = std::numeric_limits<float>::epsilon() * 10.f;
+		//to avoid getting coi at the end of the curve
+		if ((U + small) > 1.f)
 			coi = owner.get_mut<Transform>()->Position + pathComp.Curves[pathComp.Curves.size() - 1].GetTangent(1.f);
 		else
-			coi = pathComp.GetPoint(U + 0.001f);
+			coi = pathComp.GetPoint(U + small);
 		glm::vec3 w = glm::normalize(coi - owner.get_mut<Transform>()->Position);
 		glm::vec3 u = glm::normalize(glm::cross(glm::vec3{ 0.f,1.f,0.f }, w));
 		glm::vec3 v = glm::normalize(glm::cross(w, u));

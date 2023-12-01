@@ -71,6 +71,8 @@ struct AnimatorComponent
 	std::shared_ptr<Animation> CurrentAnimation;
 	std::vector<glm::mat4> FinalBoneMatrices{ 100, glm::mat4(1.f) };
 	float CurrentTime = 0.f;
+	//if -1.f then use origin
+	float NumOfCyclePerSec = 0.f;
 };
 
 struct BoneComponent

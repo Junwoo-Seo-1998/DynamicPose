@@ -33,6 +33,24 @@ Parabolic::Parabolic(float t1, float t2)
 {
 }
 
+float Parabolic::GetSpeed(float time)
+{
+	//v1(t) = v0t/t1, 0<=t<=t1
+	//v2(t) = v0, t1 < t < t2/
+	//v3(t) = v0(1 - t) / (1 - t2), t2 <= t <= 1
+
+	if (0.0f <= time && time <= t1)
+	{
+		return v * time / t1;
+	}
+	else if (t1 < time && time < t2)
+	{
+		return v;
+	}
+
+	return v * (1.f - time) / (1 - t2);
+}
+
 float Parabolic::GetDistance(float time)
 {
 	if (0.0f <= time && time <= t1)
