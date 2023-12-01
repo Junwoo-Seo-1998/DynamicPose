@@ -103,8 +103,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Math\DistanceTime.h" />
-    <ClInclude Include="src\Math\SpaceCurve.h" />
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\AssimpGLMHelpers.h" />
@@ -118,6 +116,8 @@
     <ClInclude Include="src\Graphics\VertexArray.h" />
     <ClInclude Include="src\Graphics\VertexBuffer.h" />
     <ClInclude Include="src\Input.h" />
+    <ClInclude Include="src\Math\DistanceTime.h" />
+    <ClInclude Include="src\Math\SpaceCurve.h" />
     <ClInclude Include="src\Math\VQS.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />
@@ -136,9 +136,6 @@
     <ClInclude Include="src\Window\Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Math\DistanceTime.cpp" />
-    <ClCompile Include="src\System\CurveSystem.cpp" />
-    <ClCompile Include="src\Math\SpaceCurve.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\Graphics\DebugRenderer.cpp" />
@@ -149,10 +146,13 @@
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="src\ImguiImpl.cpp" />
     <ClCompile Include="src\Input.cpp" />
+    <ClCompile Include="src\Math\DistanceTime.cpp" />
+    <ClCompile Include="src\Math\SpaceCurve.cpp" />
     <ClCompile Include="src\Math\VQS.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Parser.cpp" />
     <ClCompile Include="src\StbImpl.cpp" />
+    <ClCompile Include="src\System\CurveSystem.cpp" />
     <ClCompile Include="src\System\DemoGUI.cpp" />
     <ClCompile Include="src\System\Graphics\AnimationSystem.cpp" />
     <ClCompile Include="src\System\Graphics\SceneCamera.cpp" />
