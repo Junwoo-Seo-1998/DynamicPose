@@ -13,6 +13,7 @@ public:
     std::string name;
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;
+    bool skinned = false;
 };
 
 
@@ -20,7 +21,7 @@ class MeshInstance
 {
 public:
     MeshInstance() = default;
-    MeshInstance(Mesh& mesh);
+    MeshInstance(const Mesh& mesh);
 
     std::shared_ptr<VertexBuffer> m_Buffer;
     std::shared_ptr<IndexBuffer> m_IndexBuffer;

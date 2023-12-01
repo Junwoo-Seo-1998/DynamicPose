@@ -36,7 +36,10 @@ flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string
 			{
 				for(auto m:model.meshes)
 				{
-					_world.entity().child_of(obj).add<Transform>().set<SkinnedMeshRenderer>({ m });
+					if(m.skinned)
+						_world.entity().child_of(obj).add<Transform>().set<SkinnedMeshRenderer>({ m });
+					else
+						_world.entity().child_of(obj).add<Transform>().set<MeshRenderer>({ m });
 				}
 			}
 			else
@@ -58,16 +61,29 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 {
 	m_VertexArray = VertexArray::CreateVertexArray();
 	//testing
-	ShaderSource source{};
-	source[ShaderType::VertexShader] = { "Shader/simple.vert" };
-	source[ShaderType::FragmentShader] = {"Shader/simple.frag"};
-	m_RenderShader = Shader::CreateShaderFromFile(source);
+	{
+		ShaderSource source{};
+		source[ShaderType::VertexShader] = { "Shader/simple.vert" };
+		source[ShaderType::FragmentShader] = { "Shader/simple.frag" };
+		m_RenderShader = Shader::CreateShaderFromFile(source);
+	}
+
+	{
+		ShaderSource source{};
+		source[ShaderType::VertexShader] = { "Shader/simpleMesh.vert" };
+		source[ShaderType::FragmentShader] = { "Shader/simpleMesh.frag" };
+		m_MeshRenderShader = Shader::CreateShaderFromFile(source);
+	}
+
+	Model plane=AssimpParser::ParseModel("Plane.fbx");
+	auto planeEntity  = CreateModel(_world, plane, "PlaneObj");
+	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };
 
 	Model model = AssimpParser::ParseModel("Medieval.fbx");
 	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
 
 	auto one=CreateModel(_world, model,"MainModel");
-	one.get_mut<Transform>()->Scale = { 0.01,0.01,0.01 };
+	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
 	one.set<AnimatorComponent>({ animationHandle[16], });
 
 	std::vector<glm::vec3> points =
@@ -79,13 +95,12 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		{5.5f, 0.f, 3.f},
 		{7.f, 0.f, 4.f},
 		{6.f, 0.f, 6.f},
-		{4.f, 0.f, 3.f},
+		{4.f, 0.f, 5.f},
 		{2.f, 0.f, 4.f},
 	};
 
+
 	one.set<PathComponent>({ points });
-
-
 
 
 	/*auto two = CreateModel(_world, model, "Model_2");
@@ -125,7 +140,7 @@ void SceneRenderer::DebugRender(flecs::iter& iter, Transform* transform, DebugBo
 	if(!iter.world().get<Config>()->ShowSkeleton)
 		return;
 	glDisable(GL_DEPTH_TEST);
-	DebugRenderer::BeginScene(Application::Get().GetWorld().get<MainCamera>()->projection
+	DebugRenderer::BeginDrawLine(Application::Get().GetWorld().get<MainCamera>()->projection
 		* Application::Get().GetWorld().get<MainCamera>()->view, { 0.f,1.f,0.f });
 	for(auto i: iter)
 	{
@@ -137,14 +152,15 @@ void SceneRenderer::DebugRender(flecs::iter& iter, Transform* transform, DebugBo
 			DebugRenderer::DrawLine(p1, p2);
 		}
 	}
-	DebugRenderer::EndScene();
+	DebugRenderer::EndDrawLine();
 }
 
 void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 {
 	glDisable(GL_DEPTH_TEST);
-	DebugRenderer::BeginScene(Application::Get().GetWorld().get<MainCamera>()->projection
-		* Application::Get().GetWorld().get<MainCamera>()->view, { 1.f,1.f,0.f });
+	glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+		* Application::Get().GetWorld().get<MainCamera>()->view;
+	DebugRenderer::BeginDrawLine(viewProj, { 1.f,1.f,0.f });
 	for (auto i : iter)
 	{
 		for (auto& curve: path[i].Curves)
@@ -162,10 +178,19 @@ void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 			DebugRenderer::DrawLine(p1, curve.GetPoint(1.f));
 		}
 	}
-	DebugRenderer::EndScene();
+	DebugRenderer::EndDrawLine();
 
+	DebugRenderer::SetViewProjection(viewProj);
+	for (auto i : iter)
+	{
+		auto& controlPoints = path[i].controlPoints;
+		for (auto& p:controlPoints)
+		{
+			DebugRenderer::DrawSphere(p, 0.1f, { 1.f,0.f,0.f });
+		}
+	}
 
-	DebugRenderer::BeginScene(Application::Get().GetWorld().get<MainCamera>()->projection
+	/*DebugRenderer::BeginDrawLine(Application::Get().GetWorld().get<MainCamera>()->projection
 		* Application::Get().GetWorld().get<MainCamera>()->view, { 0.5f,0.0f,0.0f });
 	for (auto i : iter)
 	{
@@ -181,13 +206,29 @@ void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 			p1 = p2;
 		}
 	}
-	DebugRenderer::EndScene();
+	DebugRenderer::EndDrawLine();*/
 }
 
 
 void SceneRenderer::RenderMesh(flecs::iter& iter, MeshRenderer* mesh)
 {
 	glEnable(GL_DEPTH_TEST);
+	m_VertexArray->Bind();
+	m_MeshRenderShader->Use();
+	m_MeshRenderShader->SetFloat3("CamPos", Application::Get().GetWorld().get<MainCamera>()->position);
+	m_MeshRenderShader->SetMat4("Matrix.View", Application::Get().GetWorld().get<MainCamera>()->view);
+	m_MeshRenderShader->SetMat4("Matrix.Projection", Application::Get().GetWorld().get<MainCamera>()->projection);
+	m_MeshRenderShader->SetFloat4("Color", glm::vec4{ 1.f });
+
+	for (auto i : iter)
+	{
+		auto entity = iter.entity(i);
+		m_MeshRenderShader->SetMat4("Matrix.Model", entity.get<Transform>()->FinalTransformMatrix);
+		MeshRenderer& renderer = mesh[i];
+		renderer.instance.m_Buffer->BindToVertexArray();
+		renderer.instance.m_IndexBuffer->BindToVertexArray();
+		glDrawElements(GL_TRIANGLES, renderer.instance.m_IndexBuffer->GetSize(), GL_UNSIGNED_INT, nullptr);
+	}
 }
 
 void SceneRenderer::RenderSkinnedMesh(flecs::iter& iter, AnimatorComponent* animator)

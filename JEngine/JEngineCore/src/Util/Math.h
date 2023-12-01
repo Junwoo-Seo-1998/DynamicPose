@@ -1,5 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
+
+#include "Mesh.h"
 #include "Math/VQS.h"
 #include "glm/gtc/quaternion.hpp"
 
@@ -21,6 +23,8 @@ public:
 
 	static float Elerp(const float& start, const float& end, float factor);
 	static glm::vec3 Elerp(const glm::vec3& start, const glm::vec3& end, float factor);
+
+	static Mesh GenerateSpherePointsWithIndices(float radius = 1.f, int segments = 30, int rings = 30);
 };
 
 template<typename T>

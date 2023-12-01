@@ -91,18 +91,20 @@ struct PathComponent
 
 	//merged table
 	std::vector<glm::vec3> PreComputedPoints;
+	std::vector<float>UValues;
+
 	std::vector<float>CurveLength;
 	std::vector<float>InverseValues;
 
 	glm::vec3 GetPoint(float t)
 	{
-		int start = 0, end = InverseValues.size() - 1;
+		int start = 0, end = static_cast<int>(UValues.size()) - 1;
 
 		while (start <= end)
 		{
 			int middle = (start + end) / 2;
 
-			auto& toComp = InverseValues[middle];
+			auto& toComp = UValues[middle];
 			if (t == toComp)
 			{
 				return PreComputedPoints[middle];
@@ -123,13 +125,13 @@ struct PathComponent
 			std::swap(start, end);
 		}
 		//interpolate
-		float interpolationFactor = (t - InverseValues[start]) / (InverseValues[end] - InverseValues[start]);
+		float interpolationFactor = (t - UValues[start]) / (UValues[end] - UValues[start]);
 		return Math::Lerp <glm::vec3>(PreComputedPoints[start], PreComputedPoints[end], interpolationFactor);
 	}
 
 	float GetInverse(float length)
 	{
-		int start = 0, end = CurveLength.size() - 1;
+		int start = 0, end = static_cast<int>(CurveLength.size())- 1;
 
 		while (start <= end)
 		{

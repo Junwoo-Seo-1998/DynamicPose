@@ -1,6 +1,6 @@
 #include "Mesh.h"
 
-MeshInstance::MeshInstance(Mesh& mesh)
+MeshInstance::MeshInstance(const Mesh& mesh)
 {
 	struct PosNormal
 	{
