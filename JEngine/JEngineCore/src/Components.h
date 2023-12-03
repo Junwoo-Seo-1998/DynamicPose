@@ -56,7 +56,7 @@ struct SkinnedMeshRenderer
 struct Config
 {
 	bool ShowSkeleton = true;
-	bool UseVQS = true;
+	bool UseVQS = false;
 	
 	std::vector<std::shared_ptr<Animation>> AnimationList;
 	std::shared_ptr<Animation> animationToUse;
@@ -176,7 +176,7 @@ struct IKEndEffectComponent
 
 struct IKJointComponent
 {
-	//todo:add constrains
+	//since just tag
 	bool placeholder;
 };
 
@@ -186,5 +186,10 @@ struct IKComponent
 	uint64_t EndEffect = 0;
 };
 
+struct IKGoal
+{
+	//since just tag
+	bool placeholder;
+};
 
 

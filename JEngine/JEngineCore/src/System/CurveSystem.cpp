@@ -13,7 +13,7 @@ void CurveSystem::RegisterSystem(flecs::world& _world)
 		OnChange(_path);
 	});
 
-	_world.system<PathComponent>("CurveSystem").iter([&](flecs::iter& iter, PathComponent* path)
+	_world.system<PathComponent>("CurveSystem").kind(flecs::OnUpdate).iter([&](flecs::iter& iter, PathComponent* path)
 	{
 		Update(iter, path);
 	});
@@ -38,34 +38,40 @@ void CurveSystem::OnChange(PathComponent& _path)
 		_path.Curves.emplace_back(SpaceCurve{ controlPoints[0], controlPoints[1], controlPoints[2],{} });
 		return;
 	}
-
-	_path.Curves.reserve(numOfPoints - 1);
-
-	//compute a and b for inserting
-	std::vector<glm::vec3> a, b;
+	else if (numOfPoints == 4)
 	{
-		auto h = (controlPoints[1] - controlPoints[numOfPoints - 1]) / 4.f;
-		a.push_back(controlPoints[0] + h);
-		b.push_back(controlPoints[0] - h);
-	}
-	for (int i = 1; i < numOfPoints - 1; ++i)
-	{
-		auto h = (controlPoints[i + 1] - controlPoints[i - 1]) / 4.f;
-		a.push_back(controlPoints[i] + h);
-		b.push_back(controlPoints[i] - h);
-	}
-	{
-		auto h = (controlPoints[0] - controlPoints[numOfPoints - 2]) / 4.f;
-		a.push_back(controlPoints[numOfPoints - 1] + h);
-		b.push_back(controlPoints[numOfPoints - 1] - h);
+		_path.Curves.emplace_back(SpaceCurve{ controlPoints[0], controlPoints[1], controlPoints[2],controlPoints[3] });
 	}
 
-	//generate each curve
-	for (int i = 0; i < numOfPoints - 1; ++i)
+	if (numOfPoints > 4)
 	{
-		_path.Curves.emplace_back(SpaceCurve{ controlPoints[i], a[i], b[i + 1], controlPoints[i + 1] });
-	}
+		_path.Curves.reserve(numOfPoints - 1);
 
+		//compute a and b for inserting
+		std::vector<glm::vec3> a, b;
+		{
+			auto h = (controlPoints[1] - controlPoints[numOfPoints - 1]) / 4.f;
+			a.push_back(controlPoints[0] + h);
+			b.push_back(controlPoints[0] - h);
+		}
+		for (int i = 1; i < numOfPoints - 1; ++i)
+		{
+			auto h = (controlPoints[i + 1] - controlPoints[i - 1]) / 4.f;
+			a.push_back(controlPoints[i] + h);
+			b.push_back(controlPoints[i] - h);
+		}
+		{
+			auto h = (controlPoints[0] - controlPoints[numOfPoints - 2]) / 4.f;
+			a.push_back(controlPoints[numOfPoints - 1] + h);
+			b.push_back(controlPoints[numOfPoints - 1] - h);
+		}
+
+		//generate each curve
+		for (int i = 0; i < numOfPoints - 1; ++i)
+		{
+			_path.Curves.emplace_back(SpaceCurve{ controlPoints[i], a[i], b[i + 1], controlPoints[i + 1] });
+		}
+	}
 	
 	//merge table
 	float prev = 0.f;
@@ -75,7 +81,6 @@ void CurveSystem::OnChange(PathComponent& _path)
 	_path.CurveLength.clear();
 	_path.InverseValues.clear();
 
-	float endLength = static_cast<float>(numOfPoints) - 1.f;
 	for (auto& curve:_path.Curves)
 	{
 		auto& points = curve.GetPreComputedPoints();
@@ -84,7 +89,7 @@ void CurveSystem::OnChange(PathComponent& _path)
 		for (int i = 0; i < size; ++i)
 		{
 			_path.PreComputedPoints.push_back(points[i]);
-			_path.UValues.push_back((prev + UValues[i]) / endLength); //normalize
+			_path.UValues.push_back(prev + UValues[i]); //normalize
 		}
 
 		auto& arcLens = curve.GetCurveLength();
@@ -92,16 +97,29 @@ void CurveSystem::OnChange(PathComponent& _path)
 		size = static_cast<int>(arcLens.size());
 		for (int i=0; i<size; ++i)
 		{
-			_path.CurveLength.push_back((prev + arcLens[i]) / endLength); //normalize 
-			_path.InverseValues.push_back((prev + inverseValues[i]) / endLength); //normalize
+			_path.CurveLength.push_back((prev + arcLens[i])); //normalize 
+			_path.InverseValues.push_back((prev + inverseValues[i])); //normalize
 		}
 		prev += 1.f;
 	}
+
+	//normalize
+	float endUV = _path.UValues[_path.UValues.size() - 1];
+	for (auto& u : _path.UValues)
+		u /= endUV;
+
+	float endCurveLength = _path.CurveLength[_path.CurveLength.size() - 1];
+	for (auto& l : _path.CurveLength)
+		l /= endCurveLength;
+
+	float endInverseValue = _path.InverseValues[_path.InverseValues.size() - 1];
+	for (auto& u : _path.InverseValues)
+		u /= endInverseValue;
 }
 
 void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 {
-	static Parabolic distance_time{0.3f, 0.7f };
+	static Parabolic distance_time{0.3f, 0.8f };
 	for (auto i: iter)
 	{
 		auto& pathComp = path[i];
@@ -142,7 +160,7 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 
 
 		//update t and clamp
-		pathComp.t += iter.delta_time()*(1.f/8.f); //8sec will take to traverse
+		pathComp.t += iter.delta_time()*(1.f/8.f); //1sec will take to traverse
 		constexpr float to_clamp = 1.f;
 		if (pathComp.t >= to_clamp)
 		{

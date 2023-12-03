@@ -5,6 +5,7 @@
 #include "Components.h"
 #include "flecs.h"
 #include "imgui.h"
+#include "Input.h"
 
 void Demo::RegisterSystem(flecs::world& _world)
 {
@@ -13,10 +14,10 @@ void Demo::RegisterSystem(flecs::world& _world)
 			DrawGUI(iter, config);
 		});
 
-	/*_world.system<EndEffect>("Set Goal").kind(flecs::OnValidate).iter([&](flecs::iter& iter, Config* config)
+	_world.system<IKGoal>("Set Goal").kind(flecs::OnUpdate).iter([&](flecs::iter& iter, IKGoal* goal)
 	{
-		DrawGUI(iter, config);
-	});*/
+		UpdateGoal(iter, goal);
+	});
 }
 
 void Demo::DrawGUI(flecs::iter& iter, Config* config)
@@ -57,15 +58,41 @@ void Demo::DrawGUI(flecs::iter& iter, Config* config)
 	ImGui::End();
 }
 
-/*
-void Demo::UpdateGoal(flecs::iter& iter, EndEffect* end_effects)
+void Demo::UpdateGoal(flecs::iter& iter, IKGoal* goal)
 {
-	for (auto i : iter)
+	for (auto i:iter)
 	{
-		EndEffect& ee = end_effects[i];
-		auto target = iter.world().entity(ee.targetID);
-		if (!target.is_valid())
-			continue;
+		auto goalEntt=iter.entity(i);
+		glm::vec3 movement{ 0,0,0 };
+		bool changed = false;
+		if (Input::IsPressed(KeyCode::I))
+		{
+			movement += glm::vec3{ 0.f, 0.f, 1.f };
+			changed |= true;
+		}
+			
+		if (Input::IsPressed(KeyCode::K))
+		{
+			movement -= glm::vec3{ 0.f, 0.f, -1.f };
+			changed |= true;
+		}
+		if (Input::IsPressed(KeyCode::J))
+		{
+			movement -= glm::vec3{ -1.f, 0.f, 0.f };
+			changed |= true;
+		}
+		if (Input::IsPressed(KeyCode::L))
+		{
+			movement += glm::vec3{ 1.f, 0.f, 0.f };
+			changed |= true;
+		}
+
+		movement = glm::normalize(movement) * 1.f * iter.delta_time();
+
+		//goalEntt.get_mut<Transform>()->Position = movement;
+		/*auto found = iter.world().lookup("MainModel");
+		if (found.is_valid() && found.has<AnimatorComponent>())
+			found.get_mut<AnimatorComponent>()->CurrentAnimation = items[selectedItem];*/
 
 	}
-}*/
+}

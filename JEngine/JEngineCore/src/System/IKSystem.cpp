@@ -21,22 +21,29 @@ void IKSystem::UpdateIK(flecs::iter& iter, IKComponent* iks)
 		auto IKeeComp = IKee.get<IKEndEffectComponent>();
 		auto goal = iter.world().entity(IKeeComp->targetID);
 		auto & joints = IKComp.Joints;
-		//rel to joint
-		auto jointID = joints[joints.size() - 3];
-		auto joint = iter.world().entity(jointID);
 
-		auto toRelative = glm::inverse(joint.get<Transform>()->FinalTransformMatrix);
-		auto jk = joint.get<Transform>()->GetWorldOrigin();
-		auto pc = IKee.get<Transform>()->GetWorldOrigin();
-		auto pd = goal.get<Transform>()->GetWorldOrigin();
+		/*
+		for (int i = 0; i < static_cast<int>(joints.size()); ++i)
+		{
+			auto jointID = joints[i];
+			auto joint = iter.world().entity(jointID);
 
-		auto vck = glm::normalize(pc - jk);
-		auto vdk = glm::normalize(pd - jk);
-		auto ak = glm::acos(glm::dot(vck, vdk));
+			auto toRelative = glm::inverse(joint.get<Transform>()->FinalTransformMatrix);
+			auto jk = joint.get<Transform>()->GetWorldOrigin();
+			auto pc = IKee.get<Transform>()->GetWorldOrigin();
+			auto pd = goal.get<Transform>()->GetWorldOrigin();
 
-		std::cout << ak << std::endl;
-		auto vk =  glm::mat3(glm::transpose(glm::inverse(toRelative)))*glm::normalize(glm::cross(vck, vdk));
-		joint.get_mut<Transform>()->Rotation
-		=Math::Slerp(joint.get_mut<Transform>()->Rotation, glm::rotate(joint.get<Transform>()->Rotation, ak, vk), 1.f * iter.delta_time());
+			if(glm::length(pc-pd)<=0.001f)
+				break;
+
+			auto vck = glm::normalize(pc - jk);
+			auto vdk = glm::normalize(pd - jk);
+			auto ak = glm::acos(glm::dot(vck, vdk));
+
+			std::cout << ak << std::endl;
+			auto vk = glm::mat3(glm::transpose(glm::inverse(toRelative))) * glm::normalize(glm::cross(vck, vdk));
+			joint.get_mut<Transform>()->Rotation
+				= Math::Slerp(joint.get_mut<Transform>()->Rotation, glm::rotate(joint.get<Transform>()->Rotation, ak, vk), 0.5f * iter.delta_time());
+		}*/
 	}
 }

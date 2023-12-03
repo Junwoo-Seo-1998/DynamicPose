@@ -85,10 +85,15 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	auto one=CreateModel(_world, model,"MainModel");
 	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
-	one.set<AnimatorComponent>({ animationHandle[16], false});
+	one.set<AnimatorComponent>({ animationHandle[16], true});
 
 	std::vector<glm::vec3> points =
 	{
+		/*{1.f,0.f,0.f},
+		{2.f,0.f,0.0f},
+		{3.f,0.f,0.0f},
+		{4.f,0.f,0.f},
+		{5.f,0.f,0.f},*/
 		{0.f,0.f,0.f},
 		{2.f,0.f,-3.f},
 		{5.f, 0.f, -2.f},
@@ -104,9 +109,9 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 
 	//set ik joints
-	auto goal = _world.entity("Goal").add<Transform>();
-	goal.set<Transform>({ {0.3f,1.5f,1.f}, {}, glm::vec3{0.1f} });
-	goal.set<MeshRenderer>({ sphere });
+	auto goal = _world.entity("Goal").add<Transform>().add<IKGoal>();
+	goal.set<Transform>({ {0.3f,1.5f,1.f} });
+
 	std::vector<std::string> joints
 	{
 		"Chest",
@@ -114,7 +119,6 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		"UpperArm.L",
 		"LowerArm.L",
 		"Wrist.L",
-
 	};
 	std::vector<uint64_t> jointIDs;
 
@@ -130,7 +134,7 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	IKee.set<IKEndEffectComponent>({ goal.id() });
 	IKroot.set<IKComponent>({ jointIDs, IKee.id() });
 
-	//one.set<PathComponent>({ points });
+	one.set<PathComponent>({ points });
 
 	/*auto two = CreateModel(_world, model, "Model_2");
 	two.set<Transform>({ {100, 0, -100}, });
@@ -148,11 +152,26 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		DebugRender(iter, path);
 	});
 
+	
+
 	_world.system<IKJointComponent>("IK Renderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, IKJointComponent* joints)
 	{
+
 		DebugRender(iter, joints);
 	});
 
+	_world.system<IKGoal>("IK Goal").kind(flecs::OnValidate).iter([&](flecs::iter& iter, IKGoal* goal)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+				* Application::Get().GetWorld().get<MainCamera>()->view;
+
+			DebugRenderer::SetViewProjection(viewProj);
+			for (auto i : iter)
+			{
+				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.3f, { 1.f,0.f,0.f });
+			}
+		});
 
 	_world.system<MeshRenderer>("MeshRenderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, MeshRenderer* mesh)
 	{
