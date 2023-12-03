@@ -13,6 +13,7 @@
 #include "Application.h"
 #include "Graphics/DebugRenderer.h"
 #include "Math/SpaceCurve.h"
+#include "Util/EntityUtil.h"
 #include "Util/Math.h"
 
 flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string& name)
@@ -84,7 +85,7 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	auto one=CreateModel(_world, model,"MainModel");
 	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
-	one.set<AnimatorComponent>({ animationHandle[16], });
+	one.set<AnimatorComponent>({ animationHandle[16], false});
 
 	std::vector<glm::vec3> points =
 	{
@@ -99,9 +100,37 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		{2.f, 0.f, 4.f},
 	};
 
+	auto sphere = Math::GenerateSpherePointsWithIndices();
 
-	one.set<PathComponent>({ points });
 
+	//set ik joints
+	auto goal = _world.entity("Goal").add<Transform>();
+	goal.set<Transform>({ {0.3f,1.5f,1.f}, {}, glm::vec3{0.1f} });
+	goal.set<MeshRenderer>({ sphere });
+	std::vector<std::string> joints
+	{
+		"Chest",
+		"Shoulder.L",
+		"UpperArm.L",
+		"LowerArm.L",
+		"Wrist.L",
+
+	};
+	std::vector<uint64_t> jointIDs;
+
+	for (auto& j: joints)
+	{
+		auto joint = EntityUtil::FindChildWithName(j, one);
+		joint.add<IKJointComponent>();
+		jointIDs.push_back(joint.id());
+	}
+
+	auto IKroot = EntityUtil::FindChildWithName(*joints.begin(), one);
+	auto IKee = EntityUtil::FindChildWithName("Index4.L", one);
+	IKee.set<IKEndEffectComponent>({ goal.id() });
+	IKroot.set<IKComponent>({ jointIDs, IKee.id() });
+
+	//one.set<PathComponent>({ points });
 
 	/*auto two = CreateModel(_world, model, "Model_2");
 	two.set<Transform>({ {100, 0, -100}, });
@@ -118,6 +147,12 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	{
 		DebugRender(iter, path);
 	});
+
+	_world.system<IKJointComponent>("IK Renderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, IKJointComponent* joints)
+	{
+		DebugRender(iter, joints);
+	});
+
 
 	_world.system<MeshRenderer>("MeshRenderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, MeshRenderer* mesh)
 	{
@@ -186,7 +221,7 @@ void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 		auto& controlPoints = path[i].controlPoints;
 		for (auto& p:controlPoints)
 		{
-			DebugRenderer::DrawSphere(p, 0.1f, { 1.f,0.f,0.f });
+			DebugRenderer::DrawSphere(p, 0.1f, { 0.3f,1.f,0.3f });
 		}
 	}
 
@@ -207,6 +242,22 @@ void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 		}
 	}
 	DebugRenderer::EndDrawLine();*/
+}
+
+void SceneRenderer::DebugRender(flecs::iter& iter, IKJointComponent* joints)
+{
+	glDisable(GL_DEPTH_TEST);
+	glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+		* Application::Get().GetWorld().get<MainCamera>()->view;
+
+	DebugRenderer::SetViewProjection(viewProj);
+
+	for (auto i : iter)
+	{
+		auto entity = iter.entity(i);
+		auto transform = entity.get<Transform>();
+		DebugRenderer::DrawSphere(transform->GetWorldOrigin(), 0.03f, {1.f,0.f,0.f});
+	}
 }
 
 

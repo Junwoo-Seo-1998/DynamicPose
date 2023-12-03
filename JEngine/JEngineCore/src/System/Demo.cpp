@@ -1,4 +1,4 @@
-#include "DemoGUI.h"
+#include "Demo.h"
 
 #include <format>
 
@@ -6,15 +6,20 @@
 #include "flecs.h"
 #include "imgui.h"
 
-void DemoGUI::RegisterSystem(flecs::world& _world)
+void Demo::RegisterSystem(flecs::world& _world)
 {
 	_world.system<Config>("DEMO_GUI").kind(flecs::OnValidate).iter([&](flecs::iter& iter, Config* config)
 		{
 			DrawGUI(iter, config);
 		});
+
+	/*_world.system<EndEffect>("Set Goal").kind(flecs::OnValidate).iter([&](flecs::iter& iter, Config* config)
+	{
+		DrawGUI(iter, config);
+	});*/
 }
 
-void DemoGUI::DrawGUI(flecs::iter& iter, Config* config)
+void Demo::DrawGUI(flecs::iter& iter, Config* config)
 {
 	ImGui::Begin("DemoGUI");
 	for (auto i : iter)
@@ -51,3 +56,16 @@ void DemoGUI::DrawGUI(flecs::iter& iter, Config* config)
 	}
 	ImGui::End();
 }
+
+/*
+void Demo::UpdateGoal(flecs::iter& iter, EndEffect* end_effects)
+{
+	for (auto i : iter)
+	{
+		EndEffect& ee = end_effects[i];
+		auto target = iter.world().entity(ee.targetID);
+		if (!target.is_valid())
+			continue;
+
+	}
+}*/

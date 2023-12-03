@@ -11,10 +11,10 @@
 
 struct Transform
 {
+	//local
 	glm::vec3 Position{ 0.f,0.f,0.f };
 	glm::quat Rotation{ 1.f, {0.f,0.f,0.f} };
 	glm::vec3 Scale{ 1.f,1.f,1.f };
-
 	VQS FinalVQS;
 	glm::mat4 FinalTransformMatrix{ 1.f };
 
@@ -29,6 +29,11 @@ struct Transform
 	glm::vec3 GetForward() const
 	{
 		return glm::toMat4(Rotation) * glm::vec4{ 0.f,0.f,-1.f ,0.f };
+	}
+
+	glm::vec3 GetWorldOrigin() const
+	{
+		return FinalTransformMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
 	}
 };
 
@@ -69,6 +74,7 @@ struct Camera
 struct AnimatorComponent
 {
 	std::shared_ptr<Animation> CurrentAnimation;
+	bool Play = true;
 	std::vector<glm::mat4> FinalBoneMatrices{ 100, glm::mat4(1.f) };
 	float CurrentTime = 0.f;
 	//if -1.f then use origin
@@ -162,3 +168,23 @@ struct PathComponent
 		return Math::Lerp<float>(InverseValues[start], InverseValues[end], interpolationFactor);
 	}
 };
+
+struct IKEndEffectComponent
+{
+	uint64_t targetID = 0;
+};
+
+struct IKJointComponent
+{
+	//todo:add constrains
+	bool placeholder;
+};
+
+struct IKComponent
+{
+	std::vector<uint64_t> Joints;
+	uint64_t EndEffect = 0;
+};
+
+
+

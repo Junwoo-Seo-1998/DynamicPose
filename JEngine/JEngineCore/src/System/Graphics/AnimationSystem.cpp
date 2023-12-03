@@ -27,6 +27,8 @@ void AnimationSystem::UpdateAnimation(flecs::iter& iter, AnimatorComponent* anim
 	for (auto i:iter)
 	{
 		AnimatorComponent& animatorComp = animator[i];
+		if(!animatorComp.Play)
+			continue;
 		if(animatorComp.CurrentAnimation)
 		{
 			float ticksPerSec = static_cast<float>(animatorComp.CurrentAnimation->TicksPerSecond);

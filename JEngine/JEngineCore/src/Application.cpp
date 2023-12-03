@@ -13,7 +13,8 @@
 #include "GLFW/glfw3.h"
 #include "Graphics/DebugRenderer.h"
 #include "System/CurveSystem.h"
-#include "System/DemoGUI.h"
+#include "System/Demo.h"
+#include "System/IKSystem.h"
 #include "System/TransformSystem.h"
 #include "System/Graphics/AnimationSystem.h"
 #include "System/Graphics/SceneCamera.h"
@@ -63,11 +64,12 @@ int Application::Run()
 
 	AddSystem<TransformSystem>();
 	AddSystem<AnimationSystem>();
+	AddSystem<IKSystem>();
 	AddSystem<CurveSystem>();
 	AddSystem<SceneCamera>();
 	AddSystem<SceneRenderer>();
 	AddSystem<SceneViewer>();
-	AddSystem<DemoGUI>();
+	AddSystem<Demo>();
 
 	m_Window->Run([&]()
 	{
