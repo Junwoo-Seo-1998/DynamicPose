@@ -1,6 +1,7 @@
 #include "IKSystem.h"
 
 #include <iostream>
+#include <numbers>
 
 #include "Components.h"
 
@@ -39,10 +40,20 @@ void IKSystem::UpdateIK(flecs::iter& iter, IKComponent* iks)
 			auto vdk = glm::normalize(pd - jk);
 			auto ak = glm::acos(glm::dot(vck, vdk));
 
-			std::cout << ak << std::endl;
-			auto vk = glm::mat3(glm::transpose(glm::inverse(toRelative))) * glm::normalize(glm::cross(vck, vdk));
-			joint.get_mut<Transform>()->Rotation
-				= Math::Slerp(joint.get_mut<Transform>()->Rotation, glm::rotate(joint.get<Transform>()->Rotation, ak, vk), 0.5f * iter.delta_time());
+			//std::cout << ak << std::endl;
+			if (0.f <= ak && ak <= std::numbers::pi_v<float>)
+			{
+				auto vk = glm::mat3(glm::transpose(glm::inverse(toRelative))) * glm::normalize(glm::cross(vck, vdk));
+				if (glm::length(vdk) >= 0.1f)
+				{
+					joint.get_mut<Transform>()->Rotation
+						= Math::Slerp(joint.get_mut<Transform>()->Rotation, glm::rotate(joint.get<Transform>()->Rotation, ak, vk), 0.5f * iter.delta_time());
+				}
+				else
+				{
+					joint.get_mut<Transform>()->Rotation = glm::rotate(joint.get<Transform>()->Rotation, ak, vk);
+				}
+			}
 		}
 	}
 }

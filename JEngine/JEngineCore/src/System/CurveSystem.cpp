@@ -3,7 +3,9 @@
 #include <iostream>
 #include <limits>
 #include "Components.h"
+#include "Graphics/AnimationSystem.h"
 #include "Math/DistanceTime.h"
+#include "Util/EntityUtil.h"
 
 void CurveSystem::RegisterSystem(flecs::world& _world)
 {
@@ -134,11 +136,6 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 			animator->NumOfCyclePerSec = NumOfCyclePerSec;
 		}
 
-		if (owner.has<IKComponent>())
-		{
-
-		}
-
 		//get arc length from distance time function
 		float arcLen = distance_time.GetDistance(pathComp.t);
 		//get U value to find position (for inverse function)
@@ -148,7 +145,7 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 
 		//center of interest part
 		glm::vec3 coi;
-		float small = std::numeric_limits<float>::epsilon() * 10.f;
+		float small = std::numeric_limits<float>::epsilon() * 100.f;
 		//to avoid getting coi at the end of the curve
 		if ((U + small) > 1.f)
 			coi = owner.get_mut<Transform>()->Position + pathComp.Curves[pathComp.Curves.size() - 1].GetTangent(1.f);
@@ -161,6 +158,43 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 
 		//glm::mat3{ u, v, w } final coi matrix
 		owner.get_mut<Transform>()->Rotation = glm::toQuat(glm::mat3{ u, v, w });
+
+		if (owner.has<IKComponent>())
+		{
+			auto found = iter.world().lookup("Goal");
+			if (found.is_valid())
+			{
+				auto rootPos = owner.get<Transform>()->Position;
+				auto pos = found.get<Transform>()->Position;
+				pos.y = 0.f;
+				auto distance = glm::length(rootPos - pos);
+				if (distance<0.6f)
+				{
+					if (owner.has<AnimatorComponent>())
+					{
+						AnimatorComponent* animator = owner.get_mut<AnimatorComponent>();
+						if (animator->CurrentAnimation != iter.world().get<Config>()->AnimationList[5])
+						{
+							animator->Play = false;
+							animator->CurrentAnimation =
+								iter.world().get<Config>()->AnimationList[5];
+							AnimationSystem::UpdateAnimation(owner, animator, 0.0f);
+						}
+					}
+					continue;
+				}
+				else
+				{
+					if (owner.has<AnimatorComponent>())
+					{
+						AnimatorComponent* animator = owner.get_mut<AnimatorComponent>();
+						animator->Play = true;
+						animator->CurrentAnimation =
+							iter.world().get<Config>()->AnimationList[16];
+					}
+				}
+			}
+		}
 
 
 		//update t and clamp

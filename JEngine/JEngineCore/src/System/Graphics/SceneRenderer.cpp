@@ -110,17 +110,16 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	//set ik joints
 	auto goal = _world.entity("Goal").add<Transform>().add<IKGoal>();
-	goal.set<Transform>({ {0.3f,1.5f,1.f} });
+	goal.set<Transform>({ {0.3f,1.25f,1.f} });
 
 	std::vector<std::string> joints
 	{
-		"Shoulder.L",
-		"UpperArm.L",
+		//priority of joint
 		"LowerArm.L",
+		"UpperArm.L",
+		"Chest",
+		"Shoulder.L",
 		"Wrist.L",
-		"Index1.L",
-		"Index2.L",
-		"Index3.L",
 	};
 	std::vector<uint64_t> jointIDs;
 
@@ -132,7 +131,9 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	}
 
 	//auto IKroot = EntityUtil::FindChildWithName("Chest", one);
-	auto IKee = EntityUtil::FindChildWithName("Index4.L", one);
+	//auto endpointName = "Wrist.L";
+	auto endpointName = "Index4.L";
+	auto IKee = EntityUtil::FindChildWithName(endpointName, one);
 	IKee.set<IKEndEffectComponent>({ goal.id() });
 	one.set<IKComponent>({ jointIDs, IKee.id() });
 
@@ -171,7 +172,20 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 			DebugRenderer::SetViewProjection(viewProj);
 			for (auto i : iter)
 			{
-				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.3f, { 1.f,0.f,0.f });
+				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.05f, { 0.4f,0.f,0.4f });
+			}
+		});
+
+	_world.system<IKEndEffectComponent>("IKEndEffect").kind(flecs::OnValidate).iter([&](flecs::iter& iter, IKEndEffectComponent* goal)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+				* Application::Get().GetWorld().get<MainCamera>()->view;
+
+			DebugRenderer::SetViewProjection(viewProj);
+			for (auto i : iter)
+			{
+				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.05f, { 0.f,0.f,0.8f });
 			}
 		});
 

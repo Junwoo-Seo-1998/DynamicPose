@@ -44,6 +44,23 @@ void AnimationSystem::UpdateAnimation(flecs::iter& iter, AnimatorComponent* anim
 	}
 }
 
+void AnimationSystem::UpdateAnimation(flecs::entity owner, AnimatorComponent* animator, float dt)
+{
+	AnimatorComponent& animatorComp = *animator;
+	if (animatorComp.CurrentAnimation)
+	{
+		float ticksPerSec = static_cast<float>(animatorComp.CurrentAnimation->TicksPerSecond);
+		if (animatorComp.NumOfCyclePerSec != 0.f)
+		{
+			ticksPerSec = animatorComp.CurrentAnimation->Duration * animatorComp.NumOfCyclePerSec;
+		}
+		animatorComp.CurrentTime += ticksPerSec * dt;
+		animatorComp.CurrentTime = fmod(animatorComp.CurrentTime, animatorComp.CurrentAnimation->Duration);
+		flecs::entity entity = owner;
+		UpdateTransforms(entity, *animator, animatorComp.CurrentTime);
+	}
+}
+
 void AnimationSystem::UpdateTransforms(flecs::entity entity, AnimatorComponent& animator, float currentTime)
 {
 	auto& channels = animator.CurrentAnimation->ChannelsMap;
