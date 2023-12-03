@@ -31,12 +31,10 @@ void CurveSystem::OnChange(PathComponent& _path)
 	else if (numOfPoints == 2)
 	{
 		_path.Curves.emplace_back(SpaceCurve{ controlPoints[0], controlPoints[1], {},{} });
-		return;
 	}
 	else if (numOfPoints == 3)
 	{
 		_path.Curves.emplace_back(SpaceCurve{ controlPoints[0], controlPoints[1], controlPoints[2],{} });
-		return;
 	}
 	else if (numOfPoints == 4)
 	{
@@ -119,12 +117,13 @@ void CurveSystem::OnChange(PathComponent& _path)
 
 void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 {
-	static Parabolic distance_time{0.3f, 0.8f };
+	static Parabolic distance_time{0.1f, 0.9f };
 	for (auto i: iter)
 	{
 		auto& pathComp = path[i];
 		auto owner = iter.entity(i);
-
+		if(static_cast<int>(pathComp.Curves.size()) == 0)
+			continue;
 		//sync speed with animation
 		if(owner.has<AnimatorComponent>())
 		{
@@ -133,6 +132,11 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 			float P = 1.f;
 			float NumOfCyclePerSec = distance_time.GetSpeed(pathComp.t) / P;
 			animator->NumOfCyclePerSec = NumOfCyclePerSec;
+		}
+
+		if (owner.has<IKComponent>())
+		{
+
 		}
 
 		//get arc length from distance time function
@@ -160,7 +164,7 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 
 
 		//update t and clamp
-		pathComp.t += iter.delta_time()*(1.f/8.f); //1sec will take to traverse
+		pathComp.t += iter.delta_time()*(1.f/(static_cast<float>(pathComp.Curves.size()*2.f))); //1sec will take to traverse
 		constexpr float to_clamp = 1.f;
 		if (pathComp.t >= to_clamp)
 		{

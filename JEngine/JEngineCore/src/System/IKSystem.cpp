@@ -22,7 +22,6 @@ void IKSystem::UpdateIK(flecs::iter& iter, IKComponent* iks)
 		auto goal = iter.world().entity(IKeeComp->targetID);
 		auto & joints = IKComp.Joints;
 
-		/*
 		for (int i = 0; i < static_cast<int>(joints.size()); ++i)
 		{
 			auto jointID = joints[i];
@@ -44,6 +43,6 @@ void IKSystem::UpdateIK(flecs::iter& iter, IKComponent* iks)
 			auto vk = glm::mat3(glm::transpose(glm::inverse(toRelative))) * glm::normalize(glm::cross(vck, vdk));
 			joint.get_mut<Transform>()->Rotation
 				= Math::Slerp(joint.get_mut<Transform>()->Rotation, glm::rotate(joint.get<Transform>()->Rotation, ak, vk), 0.5f * iter.delta_time());
-		}*/
+		}
 	}
 }

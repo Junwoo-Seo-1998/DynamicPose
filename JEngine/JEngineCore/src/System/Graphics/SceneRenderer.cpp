@@ -85,15 +85,15 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	auto one=CreateModel(_world, model,"MainModel");
 	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
-	one.set<AnimatorComponent>({ animationHandle[16], true});
+	one.set<AnimatorComponent>({ animationHandle[16], false});
 
 	std::vector<glm::vec3> points =
 	{
-		/*{1.f,0.f,0.f},
+		/*/*{1.f,0.f,0.f},
 		{2.f,0.f,0.0f},
 		{3.f,0.f,0.0f},
 		{4.f,0.f,0.f},
-		{5.f,0.f,0.f},*/
+		{5.f,0.f,0.f},#1#
 		{0.f,0.f,0.f},
 		{2.f,0.f,-3.f},
 		{5.f, 0.f, -2.f},
@@ -102,7 +102,7 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		{7.f, 0.f, 4.f},
 		{6.f, 0.f, 6.f},
 		{4.f, 0.f, 5.f},
-		{2.f, 0.f, 4.f},
+		{2.f, 0.f, 4.f},*/
 	};
 
 	auto sphere = Math::GenerateSpherePointsWithIndices();
@@ -114,11 +114,13 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	std::vector<std::string> joints
 	{
-		"Chest",
 		"Shoulder.L",
 		"UpperArm.L",
 		"LowerArm.L",
 		"Wrist.L",
+		"Index1.L",
+		"Index2.L",
+		"Index3.L",
 	};
 	std::vector<uint64_t> jointIDs;
 
@@ -129,10 +131,10 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		jointIDs.push_back(joint.id());
 	}
 
-	auto IKroot = EntityUtil::FindChildWithName(*joints.begin(), one);
+	//auto IKroot = EntityUtil::FindChildWithName("Chest", one);
 	auto IKee = EntityUtil::FindChildWithName("Index4.L", one);
 	IKee.set<IKEndEffectComponent>({ goal.id() });
-	IKroot.set<IKComponent>({ jointIDs, IKee.id() });
+	one.set<IKComponent>({ jointIDs, IKee.id() });
 
 	one.set<PathComponent>({ points });
 

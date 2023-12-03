@@ -67,7 +67,7 @@ void Demo::UpdateGoal(flecs::iter& iter, IKGoal* goal)
 		bool changed = false;
 		if (Input::IsPressed(KeyCode::I))
 		{
-			movement += glm::vec3{ 0.f, 0.f, 1.f };
+			movement += glm::vec3{ 0.f, 0.f, -1.f };
 			changed |= true;
 		}
 			
@@ -78,7 +78,7 @@ void Demo::UpdateGoal(flecs::iter& iter, IKGoal* goal)
 		}
 		if (Input::IsPressed(KeyCode::J))
 		{
-			movement -= glm::vec3{ -1.f, 0.f, 0.f };
+			movement -= glm::vec3{ 1.f, 0.f, 0.f };
 			changed |= true;
 		}
 		if (Input::IsPressed(KeyCode::L))
@@ -87,12 +87,24 @@ void Demo::UpdateGoal(flecs::iter& iter, IKGoal* goal)
 			changed |= true;
 		}
 
-		movement = glm::normalize(movement) * 1.f * iter.delta_time();
+		if (changed)
+		{
+			movement = glm::normalize(movement) * 3.f * iter.delta_time();
 
-		//goalEntt.get_mut<Transform>()->Position = movement;
-		/*auto found = iter.world().lookup("MainModel");
-		if (found.is_valid() && found.has<AnimatorComponent>())
-			found.get_mut<AnimatorComponent>()->CurrentAnimation = items[selectedItem];*/
+			goalEntt.get_mut<Transform>()->Position += movement;
+
+			auto found = iter.world().lookup("MainModel");
+			if (found.is_valid() && found.has<PathComponent>())
+			{
+				auto originPos = found.get<Transform>()->Position;
+				auto endPos = goalEntt.get<Transform>()->Position;
+				endPos.y = 0.f;
+				auto middle1 = Math::Lerp(originPos, endPos, 0.25f);
+				auto middle2 = Math::Lerp(originPos, endPos, 0.75f);
+				found.set<PathComponent>({ {originPos,middle1,middle2,endPos} });
+			}
+		}
+		
 
 	}
 }
