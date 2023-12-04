@@ -110,28 +110,49 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	//set ik joints
 	auto goal = _world.entity("Goal").add<Transform>().add<IKGoal>();
-	goal.set<Transform>({ {0.3f,1.25f,1.f} });
+	goal.set<Transform>({ {0.3f,1.65f,0.5f} });
 
+	//set ik joints
+	//this is prioritized joint(representation of flexibility of the joints)
 	std::vector<std::string> joints
 	{
-		//priority of joint
+		//priority of joints
 		"LowerArm.L",
 		"UpperArm.L",
-		"Chest",
 		"Shoulder.L",
+		"Chest",
 		"Wrist.L",
+		"Torso",
 	};
+
+	std::vector<IKJointComponent> constrains
+	{
+		//[a_min, a_max] [b_min, b_max] //optional (z) [c_min, c_max]
+		//LowerArm
+		{{0.f, 90.f, 0.f, 0.f}},
+		//UpperArm
+		{{ 0.f, 90.f, -10.f, 90.f }},
+		//Shoulder 
+		{{ -10.f, 10.f, -10.f, 10.f }},
+		//chest
+		{{ -15.f, 15.f, -30.f, 30.f , 5.f, 5.f}, true, true, true},
+		
+		//Wrist
+		{{ -90.f, 90.f, -180.f, 180.f, -5.f, 5.f }, true,true, true},
+
+		//torso
+		{{-0.f, 5.f, -5.f, 5.f, 0.1f, 0.1f}, true, true, true},
+	};
+	
 	std::vector<uint64_t> jointIDs;
 
-	for (auto& j: joints)
+	for (int i=0; i<joints.size(); ++i)
 	{
-		auto joint = EntityUtil::FindChildWithName(j, one);
-		joint.add<IKJointComponent>();
+		auto joint = EntityUtil::FindChildWithName(joints[i], one);
+		joint.set<IKJointComponent>(constrains[i]);
 		jointIDs.push_back(joint.id());
 	}
 
-	//auto IKroot = EntityUtil::FindChildWithName("Chest", one);
-	//auto endpointName = "Wrist.L";
 	auto endpointName = "Index4.L";
 	auto IKee = EntityUtil::FindChildWithName(endpointName, one);
 	IKee.set<IKEndEffectComponent>({ goal.id() });
@@ -172,7 +193,7 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 			DebugRenderer::SetViewProjection(viewProj);
 			for (auto i : iter)
 			{
-				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.05f, { 0.4f,0.f,0.4f });
+				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.07f, { 0.4f,0.f,0.4f });
 			}
 		});
 
@@ -185,7 +206,7 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 			DebugRenderer::SetViewProjection(viewProj);
 			for (auto i : iter)
 			{
-				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.05f, { 0.f,0.f,0.8f });
+				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.07f, { 0.f,0.f,0.8f });
 			}
 		});
 

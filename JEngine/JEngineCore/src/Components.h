@@ -174,10 +174,26 @@ struct IKEndEffectComponent
 	uint64_t targetID = 0;
 };
 
+struct JointConstrain
+{
+	//eular angle
+	//x axis
+	float x_min = 0.f;
+	float x_max = 0.f;
+	//y axis
+	float y_min = 0.f;
+	float y_max = 0.f;
+
+	//z axis
+	float z_min = 0.f;
+	float z_max = 0.f;
+};
 struct IKJointComponent
 {
-	//since just tag
-	bool placeholder;
+	JointConstrain constrain{};
+	bool useConstrainX = false;
+	bool useConstrainY = false;
+	bool useConstrainZ = false;
 };
 
 struct IKComponent

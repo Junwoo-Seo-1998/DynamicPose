@@ -59,7 +59,7 @@ void Demo::DrawGUI(flecs::iter& iter, Config* config)
 		if (found.is_valid())
 		{
 			float height = found.get_mut<Transform>()->Position.y;
-			if (ImGui::DragFloat("Target Height", &height, 0.01f, 1.1f, 1.8f))
+			if (ImGui::DragFloat("Target Height", &height, 0.01f, 1.1f, 1.7f))
 			{
 				found.get_mut<Transform>()->Position.y=height;
 			}
