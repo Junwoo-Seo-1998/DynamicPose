@@ -3,7 +3,9 @@
 #include <iostream>
 #include <limits>
 #include "Components.h"
+#include "Graphics/AnimationSystem.h"
 #include "Math/DistanceTime.h"
+#include "Util/EntityUtil.h"
 
 void CurveSystem::RegisterSystem(flecs::world& _world)
 {
@@ -13,7 +15,7 @@ void CurveSystem::RegisterSystem(flecs::world& _world)
 		OnChange(_path);
 	});
 
-	_world.system<PathComponent>("CurveSystem").iter([&](flecs::iter& iter, PathComponent* path)
+	_world.system<PathComponent>("CurveSystem").kind(flecs::OnUpdate).iter([&](flecs::iter& iter, PathComponent* path)
 	{
 		Update(iter, path);
 	});
@@ -31,41 +33,45 @@ void CurveSystem::OnChange(PathComponent& _path)
 	else if (numOfPoints == 2)
 	{
 		_path.Curves.emplace_back(SpaceCurve{ controlPoints[0], controlPoints[1], {},{} });
-		return;
 	}
 	else if (numOfPoints == 3)
 	{
 		_path.Curves.emplace_back(SpaceCurve{ controlPoints[0], controlPoints[1], controlPoints[2],{} });
-		return;
+	}
+	else if (numOfPoints == 4)
+	{
+		_path.Curves.emplace_back(SpaceCurve{ controlPoints[0], controlPoints[1], controlPoints[2],controlPoints[3] });
 	}
 
-	_path.Curves.reserve(numOfPoints - 1);
+	if (numOfPoints > 4)
+	{
+		_path.Curves.reserve(numOfPoints - 1);
 
-	//compute a and b for inserting
-	std::vector<glm::vec3> a, b;
-	{
-		auto h = (controlPoints[1] - controlPoints[numOfPoints - 1]) / 4.f;
-		a.push_back(controlPoints[0] + h);
-		b.push_back(controlPoints[0] - h);
-	}
-	for (int i = 1; i < numOfPoints - 1; ++i)
-	{
-		auto h = (controlPoints[i + 1] - controlPoints[i - 1]) / 4.f;
-		a.push_back(controlPoints[i] + h);
-		b.push_back(controlPoints[i] - h);
-	}
-	{
-		auto h = (controlPoints[0] - controlPoints[numOfPoints - 2]) / 4.f;
-		a.push_back(controlPoints[numOfPoints - 1] + h);
-		b.push_back(controlPoints[numOfPoints - 1] - h);
-	}
+		//compute a and b for inserting
+		std::vector<glm::vec3> a, b;
+		{
+			auto h = (controlPoints[1] - controlPoints[numOfPoints - 1]) / 4.f;
+			a.push_back(controlPoints[0] + h);
+			b.push_back(controlPoints[0] - h);
+		}
+		for (int i = 1; i < numOfPoints - 1; ++i)
+		{
+			auto h = (controlPoints[i + 1] - controlPoints[i - 1]) / 4.f;
+			a.push_back(controlPoints[i] + h);
+			b.push_back(controlPoints[i] - h);
+		}
+		{
+			auto h = (controlPoints[0] - controlPoints[numOfPoints - 2]) / 4.f;
+			a.push_back(controlPoints[numOfPoints - 1] + h);
+			b.push_back(controlPoints[numOfPoints - 1] - h);
+		}
 
-	//generate each curve
-	for (int i = 0; i < numOfPoints - 1; ++i)
-	{
-		_path.Curves.emplace_back(SpaceCurve{ controlPoints[i], a[i], b[i + 1], controlPoints[i + 1] });
+		//generate each curve
+		for (int i = 0; i < numOfPoints - 1; ++i)
+		{
+			_path.Curves.emplace_back(SpaceCurve{ controlPoints[i], a[i], b[i + 1], controlPoints[i + 1] });
+		}
 	}
-
 	
 	//merge table
 	float prev = 0.f;
@@ -75,7 +81,6 @@ void CurveSystem::OnChange(PathComponent& _path)
 	_path.CurveLength.clear();
 	_path.InverseValues.clear();
 
-	float endLength = static_cast<float>(numOfPoints) - 1.f;
 	for (auto& curve:_path.Curves)
 	{
 		auto& points = curve.GetPreComputedPoints();
@@ -84,7 +89,7 @@ void CurveSystem::OnChange(PathComponent& _path)
 		for (int i = 0; i < size; ++i)
 		{
 			_path.PreComputedPoints.push_back(points[i]);
-			_path.UValues.push_back((prev + UValues[i]) / endLength); //normalize
+			_path.UValues.push_back(prev + UValues[i]); //normalize
 		}
 
 		auto& arcLens = curve.GetCurveLength();
@@ -92,21 +97,35 @@ void CurveSystem::OnChange(PathComponent& _path)
 		size = static_cast<int>(arcLens.size());
 		for (int i=0; i<size; ++i)
 		{
-			_path.CurveLength.push_back((prev + arcLens[i]) / endLength); //normalize 
-			_path.InverseValues.push_back((prev + inverseValues[i]) / endLength); //normalize
+			_path.CurveLength.push_back((prev + arcLens[i])); //normalize 
+			_path.InverseValues.push_back((prev + inverseValues[i])); //normalize
 		}
 		prev += 1.f;
 	}
+
+	//normalize
+	float endUV = _path.UValues[_path.UValues.size() - 1];
+	for (auto& u : _path.UValues)
+		u /= endUV;
+
+	float endCurveLength = _path.CurveLength[_path.CurveLength.size() - 1];
+	for (auto& l : _path.CurveLength)
+		l /= endCurveLength;
+
+	float endInverseValue = _path.InverseValues[_path.InverseValues.size() - 1];
+	for (auto& u : _path.InverseValues)
+		u /= endInverseValue;
 }
 
 void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 {
-	static Parabolic distance_time{0.3f, 0.7f };
+	static Parabolic distance_time{0.1f, 0.9f };
 	for (auto i: iter)
 	{
 		auto& pathComp = path[i];
 		auto owner = iter.entity(i);
-
+		if(static_cast<int>(pathComp.Curves.size()) == 0)
+			continue;
 		//sync speed with animation
 		if(owner.has<AnimatorComponent>())
 		{
@@ -126,7 +145,7 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 
 		//center of interest part
 		glm::vec3 coi;
-		float small = std::numeric_limits<float>::epsilon() * 10.f;
+		float small = std::numeric_limits<float>::epsilon() * 100.f;
 		//to avoid getting coi at the end of the curve
 		if ((U + small) > 1.f)
 			coi = owner.get_mut<Transform>()->Position + pathComp.Curves[pathComp.Curves.size() - 1].GetTangent(1.f);
@@ -140,9 +159,46 @@ void CurveSystem::Update(flecs::iter& iter, PathComponent* path)
 		//glm::mat3{ u, v, w } final coi matrix
 		owner.get_mut<Transform>()->Rotation = glm::toQuat(glm::mat3{ u, v, w });
 
+		if (owner.has<IKComponent>())
+		{
+			auto found = iter.world().lookup("Goal");
+			if (found.is_valid())
+			{
+				auto rootPos = owner.get<Transform>()->Position;
+				auto pos = found.get<Transform>()->Position;
+				pos.y = 0.f;
+				auto distance = glm::length(rootPos - pos);
+				if (distance<0.6f)
+				{
+					if (owner.has<AnimatorComponent>())
+					{
+						AnimatorComponent* animator = owner.get_mut<AnimatorComponent>();
+						if (animator->CurrentAnimation != iter.world().get<Config>()->AnimationList[5])
+						{
+							animator->Play = false;
+							animator->CurrentAnimation =
+								iter.world().get<Config>()->AnimationList[5];
+							AnimationSystem::UpdateAnimation(owner, animator, 0.0f);
+						}
+					}
+					continue;
+				}
+				else
+				{
+					if (owner.has<AnimatorComponent>())
+					{
+						AnimatorComponent* animator = owner.get_mut<AnimatorComponent>();
+						animator->Play = true;
+						animator->CurrentAnimation =
+							iter.world().get<Config>()->AnimationList[16];
+					}
+				}
+			}
+		}
+
 
 		//update t and clamp
-		pathComp.t += iter.delta_time()*(1.f/8.f); //8sec will take to traverse
+		pathComp.t += iter.delta_time()*(1.f/(static_cast<float>(pathComp.Curves.size()*2.f))); //1sec will take to traverse
 		constexpr float to_clamp = 1.f;
 		if (pathComp.t >= to_clamp)
 		{

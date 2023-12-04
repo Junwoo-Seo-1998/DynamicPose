@@ -13,6 +13,7 @@
 #include "Application.h"
 #include "Graphics/DebugRenderer.h"
 #include "Math/SpaceCurve.h"
+#include "Util/EntityUtil.h"
 #include "Util/Math.h"
 
 flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string& name)
@@ -84,10 +85,15 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	auto one=CreateModel(_world, model,"MainModel");
 	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
-	one.set<AnimatorComponent>({ animationHandle[16], });
+	one.set<AnimatorComponent>({ animationHandle[16], false});
 
 	std::vector<glm::vec3> points =
 	{
+		/*/*{1.f,0.f,0.f},
+		{2.f,0.f,0.0f},
+		{3.f,0.f,0.0f},
+		{4.f,0.f,0.f},
+		{5.f,0.f,0.f},#1#
 		{0.f,0.f,0.f},
 		{2.f,0.f,-3.f},
 		{5.f, 0.f, -2.f},
@@ -96,12 +102,63 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		{7.f, 0.f, 4.f},
 		{6.f, 0.f, 6.f},
 		{4.f, 0.f, 5.f},
-		{2.f, 0.f, 4.f},
+		{2.f, 0.f, 4.f},*/
 	};
 
+	auto sphere = Math::GenerateSpherePointsWithIndices();
+
+
+	//set ik joints
+	auto goal = _world.entity("Goal").add<Transform>().add<IKGoal>();
+	goal.set<Transform>({ {0.3f,1.65f,0.5f} });
+
+	//set ik joints
+	//this is prioritized joint(representation of flexibility of the joints)
+	std::vector<std::string> joints
+	{
+		//priority of joints
+		"LowerArm.L",
+		"UpperArm.L",
+		"Shoulder.L",
+		"Chest",
+		"Wrist.L",
+		"Torso",
+	};
+
+	std::vector<IKJointComponent> constrains
+	{
+		//[a_min, a_max] [b_min, b_max] //optional (z) [c_min, c_max]
+		//LowerArm
+		{{0.f, 90.f, 0.f, 0.f}},
+		//UpperArm
+		{{ 0.f, 90.f, -10.f, 90.f }},
+		//Shoulder 
+		{{ -10.f, 10.f, -10.f, 10.f }},
+		//chest
+		{{ -15.f, 15.f, -30.f, 30.f , 5.f, 5.f}, true, true, true},
+		
+		//Wrist
+		{{ -90.f, 90.f, -180.f, 180.f, -5.f, 5.f }, true,true, true},
+
+		//torso
+		{{-0.f, 5.f, -5.f, 5.f, 0.1f, 0.1f}, true, true, true},
+	};
+	
+	std::vector<uint64_t> jointIDs;
+
+	for (int i=0; i<joints.size(); ++i)
+	{
+		auto joint = EntityUtil::FindChildWithName(joints[i], one);
+		joint.set<IKJointComponent>(constrains[i]);
+		jointIDs.push_back(joint.id());
+	}
+
+	auto endpointName = "Index4.L";
+	auto IKee = EntityUtil::FindChildWithName(endpointName, one);
+	IKee.set<IKEndEffectComponent>({ goal.id() });
+	one.set<IKComponent>({ jointIDs, IKee.id() });
 
 	one.set<PathComponent>({ points });
-
 
 	/*auto two = CreateModel(_world, model, "Model_2");
 	two.set<Transform>({ {100, 0, -100}, });
@@ -118,6 +175,40 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	{
 		DebugRender(iter, path);
 	});
+
+	
+
+	_world.system<IKJointComponent>("IK Renderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, IKJointComponent* joints)
+	{
+
+		DebugRender(iter, joints);
+	});
+
+	_world.system<IKGoal>("IK Goal").kind(flecs::OnValidate).iter([&](flecs::iter& iter, IKGoal* goal)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+				* Application::Get().GetWorld().get<MainCamera>()->view;
+
+			DebugRenderer::SetViewProjection(viewProj);
+			for (auto i : iter)
+			{
+				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.07f, { 0.4f,0.f,0.4f });
+			}
+		});
+
+	_world.system<IKEndEffectComponent>("IKEndEffect").kind(flecs::OnValidate).iter([&](flecs::iter& iter, IKEndEffectComponent* goal)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+				* Application::Get().GetWorld().get<MainCamera>()->view;
+
+			DebugRenderer::SetViewProjection(viewProj);
+			for (auto i : iter)
+			{
+				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), 0.07f, { 0.f,0.f,0.8f });
+			}
+		});
 
 	_world.system<MeshRenderer>("MeshRenderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, MeshRenderer* mesh)
 	{
@@ -186,7 +277,7 @@ void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 		auto& controlPoints = path[i].controlPoints;
 		for (auto& p:controlPoints)
 		{
-			DebugRenderer::DrawSphere(p, 0.1f, { 1.f,0.f,0.f });
+			DebugRenderer::DrawSphere(p, 0.1f, { 0.3f,1.f,0.3f });
 		}
 	}
 
@@ -207,6 +298,22 @@ void SceneRenderer::DebugRender(flecs::iter& iter, PathComponent* path)
 		}
 	}
 	DebugRenderer::EndDrawLine();*/
+}
+
+void SceneRenderer::DebugRender(flecs::iter& iter, IKJointComponent* joints)
+{
+	glDisable(GL_DEPTH_TEST);
+	glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+		* Application::Get().GetWorld().get<MainCamera>()->view;
+
+	DebugRenderer::SetViewProjection(viewProj);
+
+	for (auto i : iter)
+	{
+		auto entity = iter.entity(i);
+		auto transform = entity.get<Transform>();
+		DebugRenderer::DrawSphere(transform->GetWorldOrigin(), 0.03f, {1.f,0.f,0.f});
+	}
 }
 
 

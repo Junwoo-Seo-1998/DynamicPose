@@ -27,6 +27,8 @@ void AnimationSystem::UpdateAnimation(flecs::iter& iter, AnimatorComponent* anim
 	for (auto i:iter)
 	{
 		AnimatorComponent& animatorComp = animator[i];
+		if(!animatorComp.Play)
+			continue;
 		if(animatorComp.CurrentAnimation)
 		{
 			float ticksPerSec = static_cast<float>(animatorComp.CurrentAnimation->TicksPerSecond);
@@ -39,6 +41,23 @@ void AnimationSystem::UpdateAnimation(flecs::iter& iter, AnimatorComponent* anim
 			flecs::entity entity = iter.entity(i);
 			UpdateTransforms(entity, animator[i], animatorComp.CurrentTime);
 		}
+	}
+}
+
+void AnimationSystem::UpdateAnimation(flecs::entity owner, AnimatorComponent* animator, float dt)
+{
+	AnimatorComponent& animatorComp = *animator;
+	if (animatorComp.CurrentAnimation)
+	{
+		float ticksPerSec = static_cast<float>(animatorComp.CurrentAnimation->TicksPerSecond);
+		if (animatorComp.NumOfCyclePerSec != 0.f)
+		{
+			ticksPerSec = animatorComp.CurrentAnimation->Duration * animatorComp.NumOfCyclePerSec;
+		}
+		animatorComp.CurrentTime += ticksPerSec * dt;
+		animatorComp.CurrentTime = fmod(animatorComp.CurrentTime, animatorComp.CurrentAnimation->Duration);
+		flecs::entity entity = owner;
+		UpdateTransforms(entity, *animator, animatorComp.CurrentTime);
 	}
 }
 

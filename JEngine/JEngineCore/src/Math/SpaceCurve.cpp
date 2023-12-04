@@ -51,40 +51,49 @@ SpaceCurve::SpaceCurve(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3
 	UValues = tempUValues;
 
 	//adaptive approach
-	float errorThreshold = 0.0001f;
-	std::list<std::tuple<float, float>> seglist;
-	seglist.push_back({ 0.f,1.f });
-	InverseValues.push_back(0.f);
-	CurveLength.push_back(0.f);
-	while (!seglist.empty())
+	constexpr bool useAdaptive = true;
+	if (useAdaptive)
 	{
-		auto [ua, ub] = seglist.front();
-		seglist.pop_front();
-		float um = (ua + ub) / 2.f;
-		glm::vec3 pa = ComputeInner(ua);
-		glm::vec3 pb = ComputeInner(ub);
-		glm::vec3 pm = ComputeInner(um);
-		float A = glm::length(pa - pm);
-		float B = glm::length(pm - pb);
-		float C = glm::length(pa - pb);
-		float d = A + B - C;
-		if(d>errorThreshold)
+		float errorThreshold = 0.0001f;
+		std::list<std::tuple<float, float>> seglist;
+		seglist.push_back({ 0.f,1.f });
+		InverseValues.push_back(0.f);
+		CurveLength.push_back(0.f);
+		while (!seglist.empty())
 		{
-			seglist.push_front({ um, ub });
-			seglist.push_front({ ua, um });
-		}
-		else
-		{
-			//record
-			InverseValues.push_back(um);
-			InverseValues.push_back(ub);
+			auto [ua, ub] = seglist.front();
+			seglist.pop_front();
+			float um = (ua + ub) / 2.f;
+			glm::vec3 pa = ComputeInner(ua);
+			glm::vec3 pb = ComputeInner(ub);
+			glm::vec3 pm = ComputeInner(um);
+			float A = glm::length(pa - pm);
+			float B = glm::length(pm - pb);
+			float C = glm::length(pa - pb);
+			float d = A + B - C;
+			if (d > errorThreshold)
+			{
+				seglist.push_front({ um, ub });
+				seglist.push_front({ ua, um });
+			}
+			else
+			{
+				//record
+				InverseValues.push_back(um);
+				InverseValues.push_back(ub);
 
-			float Gu_a = GetArcLenHelper(tempUValues, tempArcLength, ua);
-			float Gu_m = GetArcLenHelper(tempUValues, tempArcLength, um);
+				float Gu_a = GetArcLenHelper(tempUValues, tempArcLength, ua);
+				float Gu_m = GetArcLenHelper(tempUValues, tempArcLength, um);
 
-			CurveLength.push_back(Gu_a + A);
-			CurveLength.push_back(Gu_m + B);
+				CurveLength.push_back(Gu_a + A);
+				CurveLength.push_back(Gu_m + B);
+			}
 		}
+	}
+	else
+	{
+		InverseValues = tempUValues;
+		CurveLength = tempArcLength;
 	}
 
 	//normalize

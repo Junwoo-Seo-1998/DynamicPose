@@ -12,6 +12,7 @@ public:
 private:
 	void DebugRender(flecs::iter& iter, Transform* transform, DebugBone* bone);
 	void DebugRender(flecs::iter& iter, PathComponent* path);
+	void DebugRender(flecs::iter& iter, IKJointComponent* joints);
 
 	void RenderMesh(flecs::iter& iter, MeshRenderer* mesh);
 

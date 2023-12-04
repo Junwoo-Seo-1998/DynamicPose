@@ -11,10 +11,10 @@
 
 struct Transform
 {
+	//local
 	glm::vec3 Position{ 0.f,0.f,0.f };
 	glm::quat Rotation{ 1.f, {0.f,0.f,0.f} };
 	glm::vec3 Scale{ 1.f,1.f,1.f };
-
 	VQS FinalVQS;
 	glm::mat4 FinalTransformMatrix{ 1.f };
 
@@ -29,6 +29,11 @@ struct Transform
 	glm::vec3 GetForward() const
 	{
 		return glm::toMat4(Rotation) * glm::vec4{ 0.f,0.f,-1.f ,0.f };
+	}
+
+	glm::vec3 GetWorldOrigin() const
+	{
+		return FinalTransformMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
 	}
 };
 
@@ -51,7 +56,7 @@ struct SkinnedMeshRenderer
 struct Config
 {
 	bool ShowSkeleton = true;
-	bool UseVQS = true;
+	bool UseVQS = false;
 	
 	std::vector<std::shared_ptr<Animation>> AnimationList;
 	std::shared_ptr<Animation> animationToUse;
@@ -69,6 +74,7 @@ struct Camera
 struct AnimatorComponent
 {
 	std::shared_ptr<Animation> CurrentAnimation;
+	bool Play = true;
 	std::vector<glm::mat4> FinalBoneMatrices{ 100, glm::mat4(1.f) };
 	float CurrentTime = 0.f;
 	//if -1.f then use origin
@@ -162,3 +168,44 @@ struct PathComponent
 		return Math::Lerp<float>(InverseValues[start], InverseValues[end], interpolationFactor);
 	}
 };
+
+struct IKEndEffectComponent
+{
+	uint64_t targetID = 0;
+};
+
+struct JointConstrain
+{
+	//eular angle
+	//x axis
+	float x_min = 0.f;
+	float x_max = 0.f;
+	//y axis
+	float y_min = 0.f;
+	float y_max = 0.f;
+
+	//z axis
+	float z_min = 0.f;
+	float z_max = 0.f;
+};
+struct IKJointComponent
+{
+	JointConstrain constrain{};
+	bool useConstrainX = false;
+	bool useConstrainY = false;
+	bool useConstrainZ = false;
+};
+
+struct IKComponent
+{
+	std::vector<uint64_t> Joints;
+	uint64_t EndEffect = 0;
+};
+
+struct IKGoal
+{
+	//since just tag
+	bool placeholder;
+};
+
+
