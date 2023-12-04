@@ -41,8 +41,14 @@ void IKSystem::UpdateIK(flecs::iter& iter, IKComponent* iks)
 				pc = IKee.get<Transform>()->GetWorldOrigin();
 				pd = goal.get<Transform>()->GetWorldOrigin();
 
-				auto vck = glm::normalize(pc - jk);
-				auto vdk = glm::normalize(pd - jk);
+				auto vck = pc - jk;
+				auto vdk =pd - jk;
+				//just in case before normalize
+				if (vck.length() == 0.f || vdk.length() == 0.f)
+					continue;
+				vck = glm::normalize(vck);
+				vdk = glm::normalize(vdk);
+
 				auto ak = glm::acos(glm::dot(vck, vdk));
 
 				//only accept values in reasonable range
