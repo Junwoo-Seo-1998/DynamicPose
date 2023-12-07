@@ -9,7 +9,7 @@ class Math
 {
 public:
 	static float GetMaxElement(const glm::vec3& val);
-
+	static glm::mat3 GetCrossProductMatrix(const glm::vec3& vec);
 
 	static bool Decompose(const glm::mat4& transform, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale);
 	static float GetInterpolationFactor(float lastTimeStamp, float nextTimeStamp, float animationTime);
@@ -25,6 +25,10 @@ public:
 	static glm::vec3 Elerp(const glm::vec3& start, const glm::vec3& end, float factor);
 
 	static Mesh GenerateSpherePointsWithIndices(float radius = 1.f, int segments = 30, int rings = 30);
+
+	static Mesh GenerateBox(const glm::vec3& size = glm::vec3{ 1.f });
+
+	static std::tuple<glm::mat3, float> ComputeInertiaTensor(const Mesh& mesh, float expectedTotalWeight);
 };
 
 template<typename T>

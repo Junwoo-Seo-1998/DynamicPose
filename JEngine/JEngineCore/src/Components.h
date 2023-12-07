@@ -17,6 +17,8 @@ struct Transform
 	glm::vec3 Scale{ 1.f,1.f,1.f };
 	VQS FinalVQS;
 	glm::mat4 FinalTransformMatrix{ 1.f };
+	glm::mat4 ParentTransformMatrix{ 1.f };
+	glm::mat4 CurrentTransformMatrix{ 1.f };
 
 	glm::vec3 GetRight() const
 	{
@@ -35,11 +37,22 @@ struct Transform
 	{
 		return FinalTransformMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
 	}
+
+	glm::mat4 GetToLocalMatrix() const
+	{
+		return glm::inverse(ParentTransformMatrix);
+	}
 };
 
 struct DebugBone
 {
 	bool placeholder;
+};
+
+struct DebugSphere
+{
+	float rad = 1.f;
+	glm::vec3 color{ 1.f };
 };
 
 struct MeshRenderer
@@ -206,6 +219,30 @@ struct IKGoal
 {
 	//since just tag
 	bool placeholder;
+};
+
+struct RigidBody
+{
+	//constant
+	//should be computed before
+	float InverseMass = 1.f / 10.f;
+	glm::mat3 OriginalInertiaTensor{ 1.f };
+	glm::mat3 OriginalInverseInertiaTensor{ 1.f };
+
+	//state
+	//P
+	glm::vec3 LinearMomentum{ 0.f };
+	glm::vec3 AngularMomentum{ 0.f };
+
+	//Derived (helper variables)
+	glm::vec3 Velocity{ 0.f };
+	glm::vec3 AngularVelocity{ 0.f };
+
+	glm::mat3 InverseInertiaTensor = OriginalInverseInertiaTensor;
+
+	//exerted
+	glm::vec3 ForceAccumulated{0.f};
+	glm::vec3 TorqueAccumulated{ 0.f };
 };
 
 

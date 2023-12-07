@@ -15,6 +15,7 @@
 #include "System/CurveSystem.h"
 #include "System/Demo.h"
 #include "System/IKSystem.h"
+#include "System/PhysicsSystem.h"
 #include "System/TransformSystem.h"
 #include "System/Graphics/AnimationSystem.h"
 #include "System/Graphics/SceneCamera.h"
@@ -63,6 +64,7 @@ int Application::Run()
 	}).add<Camera>();
 
 	AddSystem<TransformSystem>();
+	AddSystem<PhysicsSystem>();
 	AddSystem<AnimationSystem>();
 	AddSystem<IKSystem>();
 	AddSystem<CurveSystem>();

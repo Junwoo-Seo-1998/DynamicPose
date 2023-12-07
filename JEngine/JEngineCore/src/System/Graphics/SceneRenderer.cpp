@@ -76,24 +76,49 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		m_MeshRenderShader = Shader::CreateShaderFromFile(source);
 	}
 
-	Model plane=AssimpParser::ParseModel("Plane.fbx");
+	/*Model plane=AssimpParser::ParseModel("Plane.fbx");
 	auto planeEntity  = CreateModel(_world, plane, "PlaneObj");
-	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };
+	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };*/
 
 	Model model = AssimpParser::ParseModel("Medieval.fbx");
 	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
 
-	auto one=CreateModel(_world, model,"MainModel");
+	auto one = CreateModel(_world, model, "MainModel");
+	one.get_mut<Transform>()->Position = { -3.f, 0.f, 0.f };
 	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
-	one.set<AnimatorComponent>({ animationHandle[16], false});
+	one.set<AnimatorComponent>({ animationHandle[16], true });
 
-	std::vector<glm::vec3> points =
+	auto fixed = _world.entity("fixed_left")
+		.set<Transform>({ {0.f, 5.f, 0.f}, })
+		.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
+
+	Mesh box = Math::GenerateBox(glm::vec3{ 2.f, 1.f, 1.f });
+
+	auto [I_Obj, boxWeight] = Math::ComputeInertiaTensor(box, 1.f);
+	RigidBody rigid_body{};
+	rigid_body.InverseMass = 1.f / boxWeight;
+	rigid_body.OriginalInertiaTensor = I_Obj;
+	rigid_body.OriginalInverseInertiaTensor = glm::inverse(I_Obj);
+	rigid_body.InverseInertiaTensor = rigid_body.OriginalInverseInertiaTensor;
+	//rigid_body.TorqueAccumulated += glm::cross(glm::vec3{ 1.f,0.f,0.f }, glm::vec3{ 0.f, 30.f, -30.f });
+
+	auto test = _world.entity("test")
+		.set<Transform>({ {0.f, 4.f, 0.f}, });
+		//.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
+		//test.add<RigidBody>();
+	test.set<MeshRenderer>({ box });
+	test.set<RigidBody>(rigid_body);
+
+
+
+
+	/*std::vector<glm::vec3> points =
 	{
-		/*/*{1.f,0.f,0.f},
+		/#1#*{1.f,0.f,0.f},
 		{2.f,0.f,0.0f},
 		{3.f,0.f,0.0f},
 		{4.f,0.f,0.f},
-		{5.f,0.f,0.f},#1#
+		{5.f,0.f,0.f},#2#
 		{0.f,0.f,0.f},
 		{2.f,0.f,-3.f},
 		{5.f, 0.f, -2.f},
@@ -102,7 +127,7 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		{7.f, 0.f, 4.f},
 		{6.f, 0.f, 6.f},
 		{4.f, 0.f, 5.f},
-		{2.f, 0.f, 4.f},*/
+		{2.f, 0.f, 4.f},#1#
 	};
 
 	auto sphere = Math::GenerateSpherePointsWithIndices();
@@ -158,7 +183,7 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	IKee.set<IKEndEffectComponent>({ goal.id() });
 	one.set<IKComponent>({ jointIDs, IKee.id() });
 
-	one.set<PathComponent>({ points });
+	one.set<PathComponent>({ points });*/
 
 	/*auto two = CreateModel(_world, model, "Model_2");
 	two.set<Transform>({ {100, 0, -100}, });
@@ -183,6 +208,19 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 		DebugRender(iter, joints);
 	});
+
+	_world.system<DebugSphere>("Debug Sphere").kind(flecs::OnValidate).iter([&](flecs::iter& iter, DebugSphere* sphere)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+				* Application::Get().GetWorld().get<MainCamera>()->view;
+
+			DebugRenderer::SetViewProjection(viewProj);
+			for (auto i : iter)
+			{
+				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), sphere[i].rad, sphere[i].color);
+			}
+		});
 
 	_world.system<IKGoal>("IK Goal").kind(flecs::OnValidate).iter([&](flecs::iter& iter, IKGoal* goal)
 		{
