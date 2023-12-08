@@ -61,7 +61,6 @@ flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string
 void SceneRenderer::RegisterSystem(flecs::world& _world)
 {
 	m_VertexArray = VertexArray::CreateVertexArray();
-	//testing
 	{
 		ShaderSource source{};
 		source[ShaderType::VertexShader] = { "Shader/simple.vert" };
@@ -80,60 +79,89 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	auto planeEntity  = CreateModel(_world, plane, "PlaneObj");
 	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };*/
 
+	/*
 	Model model = AssimpParser::ParseModel("Medieval.fbx");
 	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
-
+	_world.get_mut<Config>()->AnimationList = animationHandle;
 	auto one = CreateModel(_world, model, "MainModel");
 	one.get_mut<Transform>()->Position = { -3.f, 0.f, 0.f };
 	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
-	one.set<AnimatorComponent>({ animationHandle[16], true });
+	one.set<AnimatorComponent>({ animationHandle[16], true });*/
 
+	constexpr int numOfBoxes = 8;
+	constexpr int numOfSprings = numOfBoxes + 1;
+	glm::vec3 boxSize = glm::vec3{ 5.f, 1.f, 1.f };
+	Mesh boxMesh = Math::GenerateBox(boxSize);
+
+	
+	float maxLen = numOfBoxes * boxSize.x + numOfSprings * 1.f;
+	std::cout << "total len:" << maxLen << std::endl;
 	auto fixed = _world.entity("fixed_left")
-		.set<Transform>({ {0.f, 5.f, 0.f}, })
+		.set<Transform>({ {-maxLen/2.f, 5.f, 0.f}, })
 		.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
 
 	auto fixed_right = _world.entity("fixed_right")
-		.set<Transform>({ {3.f, 5.f, 0.f}, })
+		.set<Transform>({ {maxLen / 2.f, 5.f, 0.f}, })
 		.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
 
-	glm::vec3 boxSize = glm::vec3{ 2.f, 1.f, 1.f };
-	Mesh box = Math::GenerateBox(boxSize);
-
-	//float BoxWeight = 1.f;
-	auto [CenterOfMass, I_Obj, BoxWeight] = Math::ComputeInertiaTensor(box, 1.f);
-	//glm::mat3 I_Obj = (BoxWeight / 6.f) * glm::mat3{ 1.f };
+	auto [CenterOfMass, I_Obj, BoxWeight] = Math::ComputeInertiaTensor(boxMesh, 1.f);
 
 	RigidBody rigid_body{};
 	rigid_body.InverseMass = 1.f / BoxWeight;
 	rigid_body.CenterOfMass = CenterOfMass;
 	rigid_body.OriginalInertiaTensor = I_Obj;
 	rigid_body.OriginalInverseInertiaTensor = glm::inverse(I_Obj);
-	std::cout << "inverse:" << glm::to_string(rigid_body.OriginalInverseInertiaTensor) << std::endl;
 	rigid_body.InverseInertiaTensor = rigid_body.OriginalInverseInertiaTensor;
 
-	//rigid_body.TorqueAccumulated += glm::cross(glm::vec3{ 1.f,0.f,0.f }, glm::vec3{ 0.f, 30.f, -30.f });
-
 	SpringJointConnections spring_joint_connection;
-	spring_joint_connection.Target = fixed.id();
-	spring_joint_connection.springConstant = 3.f;
-	spring_joint_connection.AnchorPos = glm::vec3{ -1.f,0.f,0.f };
+	spring_joint_connection.springConstant = 30.f;
+	spring_joint_connection.AnchorPos = glm::vec3{ -boxSize.x / 2.f,0.f,0.f };
 	spring_joint_connection.MassOfAnchor = BoxWeight / 2.f;
+	spring_joint_connection.TargetMassOfAnchor = BoxWeight / 2.f;
+	
 
-	std::vector<SpringJointConnections> Connections;
-	Connections.push_back(spring_joint_connection);
-	spring_joint_connection.Target = fixed_right.id();
-	spring_joint_connection.AnchorPos = glm::vec3{ 1.f,0.f,0.f };
-	Connections.push_back(spring_joint_connection);
+	std::vector<flecs::entity> boxes;
+	float xPos = -(maxLen / 2.f - 1.f - boxSize.x / 2.f);
+
 	{
-		auto test = _world.entity("test")
-			.set<Transform>({ {1.f, 4.f, 0.f}, });
-		test.set<MeshRenderer>({ box });
-		test.set<RigidBody>(rigid_body);
-		test.set<SpringJointComponent>({ Connections });
+		std::string name = std::string("box0");
+		auto box = _world.entity(name.c_str());
+		box.set<Transform>({ {xPos, 4.f, 0.f}, });
+		box.set<MeshRenderer>({ boxMesh });
+		box.set<RigidBody>(rigid_body);
+		box.set<SpringJointComponent>({});
+		boxes.push_back(box);
+		xPos += 1.f + boxSize.x;
 	}
 
-	spring_joint_connection.Target = fixed_right.id();
-	spring_joint_connection.AnchorPos = glm::vec3{ 1.f,0.f,0.f };
+	for (int i = 1; i < numOfBoxes; ++i)
+	{
+		std::string name = std::string("box") + std::to_string(i);
+		auto box = _world.entity(name.c_str());
+		box.set<Transform>({ {xPos, 4.f, 0.f}, });
+		box.set<MeshRenderer>({ boxMesh });
+		box.set<RigidBody>(rigid_body);
+		spring_joint_connection.Target = boxes[i - 1].id();
+		spring_joint_connection.TargetAnchorPos = glm::vec3{ boxSize.x / 2.f,0.f,0.f };
+		box.set<SpringJointComponent>({ {spring_joint_connection} });
+		boxes.push_back(box);
+		xPos += 1.f + boxSize.x;
+	}
+
+
+	{
+		spring_joint_connection.Target = fixed.id();
+		spring_joint_connection.TargetAnchorPos = glm::vec3{ 0.f };
+		spring_joint_connection.AnchorPos = glm::vec3{ -boxSize.x / 2.f,0.f,0.f };
+
+		boxes[0].get_mut<SpringJointComponent>()->Connections.push_back(spring_joint_connection);
+
+		spring_joint_connection.Target = fixed_right.id();
+		spring_joint_connection.TargetAnchorPos = glm::vec3{ 0.f };
+		spring_joint_connection.AnchorPos = glm::vec3{ boxSize.x / 2.f,0.f,0.f };
+
+		boxes[numOfBoxes - 1].get_mut<SpringJointComponent>()->Connections.push_back(spring_joint_connection);
+	}
 
 	/*{
 		auto test = _world.entity("test")
@@ -143,7 +171,6 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 		test.set<SpringJointComponent>({ {spring_joint_connection} });
 	}*/
-
 
 	/*std::vector<glm::vec3> points =
 	{
@@ -221,8 +248,6 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	/*auto two = CreateModel(_world, model, "Model_2");
 	two.set<Transform>({ {100, 0, -100}, });
 	two.set<AnimatorComponent>({ animationHandle[3], });*/
-
-	_world.get_mut<Config>()->AnimationList = animationHandle;
 
 	_world.system<Transform, DebugBone>("Debug Bone Renderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, Transform* transform, DebugBone* bone)
 	{

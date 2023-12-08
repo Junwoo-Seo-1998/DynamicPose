@@ -11,6 +11,8 @@ public:
 	static float GetMaxElement(const glm::vec3& val);
 	static glm::mat3 GetCrossProductMatrix(const glm::vec3& vec);
 
+	static glm::vec3 ComputeSpringForce(float k, float equilibrium, const glm::vec3& displacement);
+
 	static bool Decompose(const glm::mat4& transform, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale);
 	static float GetInterpolationFactor(float lastTimeStamp, float nextTimeStamp, float animationTime);
 

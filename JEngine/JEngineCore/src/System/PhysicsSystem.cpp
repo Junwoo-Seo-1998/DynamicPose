@@ -6,18 +6,18 @@
 
 void PhysicsSystem::RegisterSystem(flecs::world& _world)
 {
-	_world.system<SpringJointComponent>("Compute Spring Damper system")
-		.kind(flecs::OnUpdate)
-		.iter([&](flecs::iter& iter, SpringJointComponent* spring)
-		{
-			UpdateSpringPhysics(iter, spring);
-		});
-
 	_world.system<RigidBody>("Compute Physics")
 		.kind(flecs::OnUpdate)
 		.iter([&](flecs::iter& iter, RigidBody* body)
 			{
 				Update(iter, body);
+			});
+
+	_world.system<SpringJointComponent>("Compute Spring Damper system")
+		.kind(flecs::OnUpdate)
+		.iter([&](flecs::iter& iter, SpringJointComponent* spring)
+			{
+				UpdateSpringPhysics(iter, spring);
 			});
 }
 
@@ -33,14 +33,14 @@ void PhysicsSystem::Update(flecs::iter& iter, RigidBody* bodies)
 		auto object = iter.entity(i);
 
 		//change of P
-		bodies->LinearMomentum += bodies->ForceAccumulated * iter.delta_time();
+		body.LinearMomentum += body.ForceAccumulated * iter.delta_time();
 		//change of L
-		bodies->AngularMomentum += bodies->TorqueAccumulated * iter.delta_time();
+		body.AngularMomentum += body.TorqueAccumulated * iter.delta_time();
 
 		//v
-		body.Velocity = bodies->LinearMomentum * bodies->InverseMass;
+		body.Velocity = body.LinearMomentum * body.InverseMass;
 		//w
-		bodies->AngularVelocity = bodies->InverseInertiaTensor * bodies->AngularMomentum;
+		body.AngularVelocity = body.InverseInertiaTensor * body.AngularMomentum;
 
 		//x(t)
 		Transform& transform = *object.get_mut<Transform>();
@@ -48,7 +48,7 @@ void PhysicsSystem::Update(flecs::iter& iter, RigidBody* bodies)
 
 		//R(t)
 		glm::mat3 rotation = glm::toMat4(transform.Rotation);
-		glm::mat3 ChangeOfRotation = Math::GetCrossProductMatrix(bodies->AngularVelocity) * rotation;
+		glm::mat3 ChangeOfRotation = Math::GetCrossProductMatrix(body.AngularVelocity) * rotation;
 		rotation += ChangeOfRotation * iter.delta_time();
 		transform.Rotation = glm::normalize(glm::quat(rotation));
 		rotation = glm::toMat4(transform.Rotation);
@@ -60,11 +60,11 @@ void PhysicsSystem::Update(flecs::iter& iter, RigidBody* bodies)
 		glm::mat3 rotation = glm::toMat4(transform.Rotation);*/
 
 		//update InverseInertiaTensor
-		bodies->InverseInertiaTensor = rotation * bodies->OriginalInverseInertiaTensor * glm::transpose(rotation);
+		body.InverseInertiaTensor = rotation * body.OriginalInverseInertiaTensor * glm::transpose(rotation);
 
 		//clear
-		bodies->ForceAccumulated = glm::vec3{ 0.f };
-		bodies->TorqueAccumulated = glm::vec3{ 0.f };
+		body.ForceAccumulated = glm::vec3{ 0.f };
+		body.TorqueAccumulated = glm::vec3{ 0.f };
 	}
 }
 
@@ -74,6 +74,7 @@ void PhysicsSystem::UpdateSpringPhysics(flecs::iter& iter, SpringJointComponent*
 	for(auto i:iter)
 	{
 		auto entity = iter.entity(i);
+
 		RigidBody& rigid_body = *entity.get_mut<RigidBody>();
 		const glm::mat4& entityTransform = entity.get<Transform>()->CurrentTransformMatrix;
 		SpringJointComponent& springComp = springComponents[i];
@@ -82,20 +83,39 @@ void PhysicsSystem::UpdateSpringPhysics(flecs::iter& iter, SpringJointComponent*
 			auto target = iter.world().entity(c.Target);
 			glm::vec3 targetGlobalPos = target.get<Transform>()->CurrentTransformMatrix * glm::vec4(c.TargetAnchorPos, 1.f);
 			glm::vec3 anchorGlobalPos = entityTransform * glm::vec4(c.AnchorPos, 1.f);
-			glm::vec3 globalCOM = entityTransform * glm::vec4(rigid_body.CenterOfMass, 1.f);
-			glm::vec3 r = anchorGlobalPos - globalCOM;
-			//apply gravity
+			//current object
+			{
+				glm::vec3 globalCOM = entityTransform * glm::vec4(rigid_body.CenterOfMass, 1.f);
+				glm::vec3 r = anchorGlobalPos - globalCOM;
 
-			glm::vec3 springForce = 10.f * (targetGlobalPos - anchorGlobalPos);
-			glm::vec3 gravity = c.MassOfAnchor * gravityDir;
-			glm::vec3 tangentVelocity = glm::cross(rigid_body.AngularVelocity, r);
-			glm::vec3 damping = -c.damping * (rigid_body.Velocity + tangentVelocity);
-			glm::vec3 totalForce = springForce + gravity + damping;
+				//glm::vec3 springForce = Math::ComputeSpringForce(c.springConstant, c.springLength, (targetGlobalPos - anchorGlobalPos));
+				glm::vec3 springForce = c.springConstant * (targetGlobalPos - anchorGlobalPos);
+				glm::vec3 gravity = c.MassOfAnchor * gravityDir;
+				glm::vec3 tangentVelocity = glm::cross(rigid_body.AngularVelocity, r);
+				glm::vec3 damping = -c.damping * (rigid_body.Velocity + tangentVelocity);
+				glm::vec3 totalForce = springForce + gravity + damping;
 
-			
-			rigid_body.ForceAccumulated += totalForce;
-			rigid_body.TorqueAccumulated += glm::cross(r, totalForce);
-			//std::cout<<glm::to_string(glm::cross(c.AnchorPos - rigid_body.CenterOfMass, totalForce))<<std::endl;
+				rigid_body.ForceAccumulated += totalForce;
+				rigid_body.TorqueAccumulated += glm::cross(r, totalForce);
+			}
+
+			//target object
+			if(target.has<RigidBody>())
+			{
+				RigidBody& target_rigid_body = *target.get_mut<RigidBody>();
+				glm::vec3 globalCOM = target.get<Transform>()->CurrentTransformMatrix * glm::vec4(target_rigid_body.CenterOfMass, 1.f);
+				glm::vec3 r = targetGlobalPos - globalCOM;
+				
+				//glm::vec3 springForce = Math::ComputeSpringForce(c.springConstant, c.springLength, (anchorGlobalPos - targetGlobalPos));
+				glm::vec3 springForce = c.springConstant * (anchorGlobalPos - targetGlobalPos);
+				glm::vec3 gravity = c.TargetMassOfAnchor * gravityDir;
+				glm::vec3 tangentVelocity = glm::cross(target_rigid_body.AngularVelocity, r);
+				glm::vec3 damping = -c.damping * (target_rigid_body.Velocity + tangentVelocity);
+				glm::vec3 totalForce = springForce + gravity + damping;
+
+				target_rigid_body.ForceAccumulated += totalForce;
+				target_rigid_body.TorqueAccumulated += glm::cross(r, totalForce);
+			}
 		}
 	}
 }

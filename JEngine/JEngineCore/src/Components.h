@@ -260,7 +260,7 @@ struct SpringJointConnections
 
 	float springConstant = 1.f;
 	float springLength = 1.f;
-	float damping = 0.3f;
+	float damping = 0.5f;
 };
 
 struct SpringJointComponent

@@ -19,6 +19,17 @@ glm::mat3 Math::GetCrossProductMatrix(const glm::vec3& vec)
 	};
 }
 
+glm::vec3 Math::ComputeSpringForce(float k, float equilibrium, const glm::vec3& displacement)
+{
+	float l = glm::length(displacement);
+	if (l<=0.f)
+	{
+		l = std::numeric_limits<float>::epsilon();
+	}
+
+	return k * (1 - (equilibrium / l)) * displacement;
+}
+
 
 bool Math::Decompose(const glm::mat4& transform, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale)
 {
