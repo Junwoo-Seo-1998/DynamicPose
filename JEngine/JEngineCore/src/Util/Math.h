@@ -28,7 +28,7 @@ public:
 
 	static Mesh GenerateBox(const glm::vec3& size = glm::vec3{ 1.f });
 
-	static std::tuple<glm::mat3, float> ComputeInertiaTensor(const Mesh& mesh, float expectedTotalWeight);
+	static std::tuple<glm::vec3, glm::mat3, float> ComputeInertiaTensor(const Mesh& mesh, float expectedTotalWeight);
 };
 
 template<typename T>

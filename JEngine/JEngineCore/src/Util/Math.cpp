@@ -12,8 +12,11 @@ float Math::GetMaxElement(const glm::vec3& val)
 
 glm::mat3 Math::GetCrossProductMatrix(const glm::vec3& vec)
 {
-	return glm::mat3
-	{ 0.f, vec.z, -vec.y, -vec.z, 0.f, vec.x, vec.y, -vec.x, 0.f };
+	return glm::mat3{
+		{0.f, vec.z, -vec.y},
+		{ -vec.z,0.f, vec.x},
+		{vec.y, -vec.x, 0.f }
+	};
 }
 
 
@@ -294,7 +297,7 @@ Mesh Math::GenerateBox(const glm::vec3& size)
 	return box;
 }
 
-std::tuple<glm::mat3, float> Math::ComputeInertiaTensor(const Mesh& mesh, float expectedTotalWeight)
+std::tuple<glm::vec3, glm::mat3, float> Math::ComputeInertiaTensor(const Mesh& mesh, float expectedTotalWeight)
 {
 	const float pointMass = expectedTotalWeight / static_cast<float>(mesh.vertices.size());
 
@@ -318,5 +321,5 @@ std::tuple<glm::mat3, float> Math::ComputeInertiaTensor(const Mesh& mesh, float 
 	std::cout << glm::to_string(centerOfMas) << std::endl;
 	std::cout << glm::to_string(InertiaTensor) << std::endl;
 
-	return { InertiaTensor, expectedTotalWeight};
+	return { centerOfMas, InertiaTensor, expectedTotalWeight };
 }

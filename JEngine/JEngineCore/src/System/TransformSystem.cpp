@@ -16,7 +16,7 @@ void TransformSystem::RegisterSystem(flecs::world& _world)
 void TransformSystem::UpdateTransform(flecs::iter& iter, Transform* transform, Transform* p_transform)
 {
 	//imgui option to toggle vqs
-	bool useVQS = iter.world().get<Config>()->UseVQS;
+	bool useVQS = false;
 	for (auto i: iter) //iter is sorted index with breath first search parent->child
 	{
 		Transform& transformComp = transform[i];

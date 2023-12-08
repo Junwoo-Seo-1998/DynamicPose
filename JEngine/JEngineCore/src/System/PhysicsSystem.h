@@ -9,5 +9,7 @@ public:
 	void RegisterSystem(flecs::world& _world) override;
 public:
 	void Update(flecs::iter& iter, RigidBody* bodies);
+
+	void UpdateSpringPhysics(flecs::iter& iter, SpringJointComponent* springComponents);
 };
 

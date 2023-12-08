@@ -226,6 +226,7 @@ struct RigidBody
 	//constant
 	//should be computed before
 	float InverseMass = 1.f / 10.f;
+	glm::vec3 CenterOfMass{ 0.f };
 	glm::mat3 OriginalInertiaTensor{ 1.f };
 	glm::mat3 OriginalInverseInertiaTensor{ 1.f };
 
@@ -245,4 +246,25 @@ struct RigidBody
 	glm::vec3 TorqueAccumulated{ 0.f };
 };
 
+
+struct SpringJointConnections
+{
+	uint64_t Target = 0;
+	//local of target
+	glm::vec3 TargetAnchorPos{};
+	float TargetMassOfAnchor = 1.f;
+
+	//local of owner
+	glm::vec3 AnchorPos{};
+	float MassOfAnchor = 1.f;
+
+	float springConstant = 1.f;
+	float springLength = 1.f;
+	float damping = 0.3f;
+};
+
+struct SpringJointComponent
+{
+	std::vector<SpringJointConnections> Connections;
+};
 

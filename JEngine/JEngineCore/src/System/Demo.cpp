@@ -55,13 +55,37 @@ void Demo::DrawGUI(flecs::iter& iter, Config* config)
 				found.get_mut<AnimatorComponent>()->CurrentAnimation = items[selectedItem];
 		}*/
 
-		auto found = iter.world().lookup("Goal");
+		/*auto found = iter.world().lookup("Goal");
 		if (found.is_valid())
 		{
 			float height = found.get_mut<Transform>()->Position.y;
 			if (ImGui::DragFloat("Target Height", &height, 0.01f, 1.1f, 1.7f))
 			{
 				found.get_mut<Transform>()->Position.y=height;
+			}
+		}*/
+		//left
+		{
+			auto found = iter.world().lookup("fixed_left");
+			if (found.is_valid())
+			{
+				float height = found.get_mut<Transform>()->Position.y;
+				if (ImGui::DragFloat("Left Height", &height, 0.1f))
+				{
+					found.get_mut<Transform>()->Position.y = height;
+				}
+			}
+		}
+		//left
+		{
+			auto found = iter.world().lookup("fixed_right");
+			if (found.is_valid())
+			{
+				float height = found.get_mut<Transform>()->Position.y;
+				if (ImGui::DragFloat("Right Height", &height, 0.1f))
+				{
+					found.get_mut<Transform>()->Position.y = height;
+				}
 			}
 		}
 	}

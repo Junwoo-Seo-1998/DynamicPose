@@ -92,24 +92,57 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		.set<Transform>({ {0.f, 5.f, 0.f}, })
 		.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
 
-	Mesh box = Math::GenerateBox(glm::vec3{ 2.f, 1.f, 1.f });
+	auto fixed_right = _world.entity("fixed_right")
+		.set<Transform>({ {3.f, 5.f, 0.f}, })
+		.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
 
-	auto [I_Obj, boxWeight] = Math::ComputeInertiaTensor(box, 1.f);
+	glm::vec3 boxSize = glm::vec3{ 2.f, 1.f, 1.f };
+	Mesh box = Math::GenerateBox(boxSize);
+
+	//float BoxWeight = 1.f;
+	auto [CenterOfMass, I_Obj, BoxWeight] = Math::ComputeInertiaTensor(box, 1.f);
+	//glm::mat3 I_Obj = (BoxWeight / 6.f) * glm::mat3{ 1.f };
+
 	RigidBody rigid_body{};
-	rigid_body.InverseMass = 1.f / boxWeight;
+	rigid_body.InverseMass = 1.f / BoxWeight;
+	rigid_body.CenterOfMass = CenterOfMass;
 	rigid_body.OriginalInertiaTensor = I_Obj;
 	rigid_body.OriginalInverseInertiaTensor = glm::inverse(I_Obj);
+	std::cout << "inverse:" << glm::to_string(rigid_body.OriginalInverseInertiaTensor) << std::endl;
 	rigid_body.InverseInertiaTensor = rigid_body.OriginalInverseInertiaTensor;
+
 	//rigid_body.TorqueAccumulated += glm::cross(glm::vec3{ 1.f,0.f,0.f }, glm::vec3{ 0.f, 30.f, -30.f });
 
-	auto test = _world.entity("test")
-		.set<Transform>({ {0.f, 4.f, 0.f}, });
-		//.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
-		//test.add<RigidBody>();
-	test.set<MeshRenderer>({ box });
-	test.set<RigidBody>(rigid_body);
+	SpringJointConnections spring_joint_connection;
+	spring_joint_connection.Target = fixed.id();
+	spring_joint_connection.springConstant = 3.f;
+	spring_joint_connection.AnchorPos = glm::vec3{ -1.f,0.f,0.f };
+	spring_joint_connection.MassOfAnchor = BoxWeight / 2.f;
 
+	std::vector<SpringJointConnections> Connections;
+	Connections.push_back(spring_joint_connection);
+	spring_joint_connection.Target = fixed_right.id();
+	spring_joint_connection.AnchorPos = glm::vec3{ 1.f,0.f,0.f };
+	Connections.push_back(spring_joint_connection);
+	{
+		auto test = _world.entity("test")
+			.set<Transform>({ {1.f, 4.f, 0.f}, });
+		test.set<MeshRenderer>({ box });
+		test.set<RigidBody>(rigid_body);
+		test.set<SpringJointComponent>({ Connections });
+	}
 
+	spring_joint_connection.Target = fixed_right.id();
+	spring_joint_connection.AnchorPos = glm::vec3{ 1.f,0.f,0.f };
+
+	/*{
+		auto test = _world.entity("test")
+			.set<Transform>({ {1.f, 4.f, 0.f}, });
+		test.set<MeshRenderer>({ box });
+		test.set<RigidBody>(rigid_body);
+
+		test.set<SpringJointComponent>({ {spring_joint_connection} });
+	}*/
 
 
 	/*std::vector<glm::vec3> points =
@@ -208,6 +241,30 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 		DebugRender(iter, joints);
 	});
+
+
+	_world.system<SpringJointComponent>("Debug Spring").kind(flecs::OnValidate).iter([&](flecs::iter& iter, SpringJointComponent* spring_joint_component)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+				* Application::Get().GetWorld().get<MainCamera>()->view;
+			DebugRenderer::BeginDrawLine(viewProj, { 1.f,1.f,0.f });
+			for (auto i : iter)
+			{
+				auto entity = iter.entity(i);
+				const glm::mat4& entityTransform = entity.get<Transform>()->CurrentTransformMatrix;
+				SpringJointComponent& springComp = spring_joint_component[i];
+				for (auto& c : springComp.Connections)
+				{
+					auto target = iter.world().entity(c.Target);
+					glm::vec3 targetGlobalPos = target.get<Transform>()->CurrentTransformMatrix * glm::vec4(c.TargetAnchorPos, 1.f);
+					glm::vec3 anchorGlobalPos = entityTransform * glm::vec4(c.AnchorPos, 1.f);
+					DebugRenderer::DrawLine(anchorGlobalPos, targetGlobalPos);
+				}
+			}
+			DebugRenderer::EndDrawLine();
+		});
+
 
 	_world.system<DebugSphere>("Debug Sphere").kind(flecs::OnValidate).iter([&](flecs::iter& iter, DebugSphere* sphere)
 		{
