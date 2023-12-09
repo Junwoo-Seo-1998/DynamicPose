@@ -11,6 +11,8 @@ void PhysicsSystem::RegisterSystem(flecs::world& _world)
 		.iter([&](flecs::iter& iter, RigidBody* body)
 			{
 				Update(iter, body);
+				for (auto i : iter)
+					body[i].AngularMomentum *= 0.98f; //to give little damp
 			});
 
 	_world.system<SpringJointComponent>("Compute Spring Damper system")
@@ -105,7 +107,6 @@ void PhysicsSystem::UpdateSpringPhysics(flecs::iter& iter, SpringJointComponent*
 				glm::vec3 globalCOM = entityTransform * glm::vec4(rigid_body.CenterOfMass, 1.f);
 				glm::vec3 r = anchorGlobalPos - globalCOM;
 
-				//glm::vec3 springForce = Math::ComputeSpringForce(c.springConstant, c.springLength, (targetGlobalPos - anchorGlobalPos));
 				glm::vec3 springForce = c.springConstant * (targetGlobalPos - anchorGlobalPos);
 				glm::vec3 gravity = c.MassOfAnchor * gravityDir;
 				glm::vec3 tangentVelocity = glm::cross(rigid_body.AngularVelocity, r);
