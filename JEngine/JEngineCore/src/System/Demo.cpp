@@ -27,7 +27,7 @@ void Demo::DrawGUI(flecs::iter& iter, Config* config)
 	{
 		ImGui::Text(std::format("delta time: {}", iter.delta_time()).c_str());
 		ImGui::Checkbox("Show Skeleton", &config[i].ShowSkeleton);
-		ImGui::Checkbox("Use VQS", &config[i].UseVQS);
+		/*ImGui::Checkbox("Use VQS", &config[i].UseVQS);*/
 		/*{
 			auto& items = config[i].AnimationList;
 			static int selectedItem = 16;
