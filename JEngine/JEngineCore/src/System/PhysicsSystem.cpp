@@ -23,28 +23,51 @@ void PhysicsSystem::RegisterSystem(flecs::world& _world)
 
 void PhysicsSystem::Update(flecs::iter& iter, RigidBody* bodies)
 {
-
 	for (auto i: iter)
 	{
 		RigidBody& body = bodies[i];
 		//skip since it's fixed point
-		if(body.InverseMass==0.f)
+		if (body.InverseMass == 0.f)
+		{
+			body.CurrentForceAccumulated = glm::vec3{ 0.f };
+			body.CurrentTorqueAccumulated = glm::vec3{ 0.f };
 			continue;
+		}
 		auto object = iter.entity(i);
 
+		float halfdt = iter.delta_time() * 0.5f;
 		//change of P
-		body.LinearMomentum += body.ForceAccumulated * iter.delta_time();
+		//for rk2
+		auto halfStepLinearMomentum = body.LinearMomentum + body.CurrentForceAccumulated * halfdt;
+		body.LinearMomentum += body.CurrentForceAccumulated * iter.delta_time();
+
 		//change of L
-		body.AngularMomentum += body.TorqueAccumulated * iter.delta_time();
+		//for rk2
+		auto halfStepAngularMomentum = body.AngularMomentum + body.CurrentTorqueAccumulated * halfdt;
+		body.AngularMomentum += body.CurrentTorqueAccumulated * iter.delta_time();
 
 		//v
-		body.Velocity = body.LinearMomentum * body.InverseMass;
+		//for rk2
+		auto halfStepVelocity = halfStepLinearMomentum * body.InverseMass;
+		auto prevHalfStepVelocity = body.PrevLinearMomentumHalfStep * body.InverseMass;
+		//rk2 ver of body.Velocity = body.LinearMomentum * body.InverseMass 
+		body.Velocity = prevHalfStepVelocity + halfStepVelocity;
+		//for next frame rk2
+		body.PrevLinearMomentumHalfStep = halfStepLinearMomentum;
+
 		//w
-		body.AngularVelocity = body.InverseInertiaTensor * body.AngularMomentum;
+		//for rk2
+		auto halfStepAngularVelocity = body.InverseInertiaTensor * halfStepAngularMomentum;
+		auto prevHalfStepAngularVelocity = body.InverseInertiaTensor * body.PrevAngularMomentumHalfStep;
+		//rk2 ver body.AngularVelocity = body.InverseInertiaTensor * body.AngularMomentum;
+		body.AngularVelocity = halfStepAngularVelocity + prevHalfStepAngularVelocity;
+		//for next frame rk2
+		body.PrevAngularMomentumHalfStep = halfStepAngularMomentum;
 
 		//x(t)
 		Transform& transform = *object.get_mut<Transform>();
-		transform.Position += body.Velocity * iter.delta_time();
+		auto rk2Velocity = body.Velocity;
+		transform.Position += rk2Velocity * iter.delta_time();
 
 		//R(t)
 		glm::mat3 rotation = glm::toMat4(transform.Rotation);
@@ -53,18 +76,12 @@ void PhysicsSystem::Update(flecs::iter& iter, RigidBody* bodies)
 		transform.Rotation = glm::normalize(glm::quat(rotation));
 		rotation = glm::toMat4(transform.Rotation);
 
-		/*//w,x,y, and z order
-		glm::quat angVelQuat(0.f, body.AngularVelocity.x, body.AngularVelocity.y, body.AngularVelocity.z);
-		transform.Rotation += (0.5f * angVelQuat * transform.Rotation) * iter.delta_time();
-		transform.Rotation = glm::normalize(transform.Rotation);//to unit
-		glm::mat3 rotation = glm::toMat4(transform.Rotation);*/
-
 		//update InverseInertiaTensor
 		body.InverseInertiaTensor = rotation * body.OriginalInverseInertiaTensor * glm::transpose(rotation);
 
 		//clear
-		body.ForceAccumulated = glm::vec3{ 0.f };
-		body.TorqueAccumulated = glm::vec3{ 0.f };
+		body.CurrentForceAccumulated = glm::vec3{ 0.f };
+		body.CurrentTorqueAccumulated = glm::vec3{ 0.f };
 	}
 }
 
@@ -95,8 +112,8 @@ void PhysicsSystem::UpdateSpringPhysics(flecs::iter& iter, SpringJointComponent*
 				glm::vec3 damping = -c.damping * (rigid_body.Velocity + tangentVelocity);
 				glm::vec3 totalForce = springForce + gravity + damping;
 
-				rigid_body.ForceAccumulated += totalForce;
-				rigid_body.TorqueAccumulated += glm::cross(r, totalForce);
+				rigid_body.CurrentForceAccumulated += totalForce;
+				rigid_body.CurrentTorqueAccumulated += glm::cross(r, totalForce);
 			}
 
 			//target object
@@ -113,8 +130,8 @@ void PhysicsSystem::UpdateSpringPhysics(flecs::iter& iter, SpringJointComponent*
 				glm::vec3 damping = -c.damping * (target_rigid_body.Velocity + tangentVelocity);
 				glm::vec3 totalForce = springForce + gravity + damping;
 
-				target_rigid_body.ForceAccumulated += totalForce;
-				target_rigid_body.TorqueAccumulated += glm::cross(r, totalForce);
+				target_rigid_body.CurrentForceAccumulated += totalForce;
+				target_rigid_body.CurrentTorqueAccumulated += glm::cross(r, totalForce);
 			}
 		}
 	}

@@ -242,8 +242,12 @@ struct RigidBody
 	glm::mat3 InverseInertiaTensor = OriginalInverseInertiaTensor;
 
 	//exerted
-	glm::vec3 ForceAccumulated{0.f};
-	glm::vec3 TorqueAccumulated{ 0.f };
+	glm::vec3 CurrentForceAccumulated{0.f};
+	glm::vec3 CurrentTorqueAccumulated{ 0.f };
+
+	//for integration
+	glm::vec3 PrevLinearMomentumHalfStep{ 0.f };
+	glm::vec3 PrevAngularMomentumHalfStep{ 0.f };
 };
 
 
