@@ -64,6 +64,7 @@ void Demo::DrawGUI(flecs::iter& iter, Config* config)
 				found.get_mut<Transform>()->Position.y=height;
 			}
 		}*/
+
 		//left
 		{
 			auto found = iter.world().lookup("fixed_left");
@@ -88,6 +89,41 @@ void Demo::DrawGUI(flecs::iter& iter, Config* config)
 				}
 			}
 		}
+
+		//selection
+		{
+			static const char* items[] = { "fixed_left", "fixed_right" };
+			static int selectedItem = 0;
+			static const char* item_current = items[0];
+			if (ImGui::BeginCombo("Select Anchors", items[selectedItem])) // The second parameter is the label previewed before opening the combo.
+			{
+				for (int n = 0; n < 2; n++)
+				{
+					bool is_selected = (items[selectedItem] == items[n]);
+					if (ImGui::Selectable(items[n], is_selected))
+					{
+						item_current = items[n];
+						selectedItem = n;
+					}
+					if (is_selected)
+					{
+
+						ImGui::SetItemDefaultFocus();
+					}
+				}
+				ImGui::EndCombo();
+			}
+			auto found = iter.world().lookup(items[selectedItem]);
+			if (found.is_valid())
+			{
+				auto pos = found.get_mut<Transform>()->Position;
+				if (ImGui::DragFloat3("Position", &pos.x, 0.1f))
+				{
+					found.get_mut<Transform>()->Position = pos;
+				}
+			}
+		}
+		
 	}
 	ImGui::End();
 }

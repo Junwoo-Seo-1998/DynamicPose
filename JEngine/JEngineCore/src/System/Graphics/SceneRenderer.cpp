@@ -33,7 +33,7 @@ flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string
 				obj.set<BoneComponent>({ iter->second.id ,iter->second.offset });
 			}
 
-			if(model.meshes.size()>0)
+			if(static_cast<int>(model.meshes.size())>0)
 			{
 				for(auto m:model.meshes)
 				{
@@ -77,9 +77,8 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	/*Model plane=AssimpParser::ParseModel("Plane.fbx");
 	auto planeEntity  = CreateModel(_world, plane, "PlaneObj");
-	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };*/
+	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };
 
-	/*
 	Model model = AssimpParser::ParseModel("Medieval.fbx");
 	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
 	_world.get_mut<Config>()->AnimationList = animationHandle;
@@ -95,7 +94,7 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 	
 	float maxLen = numOfBoxes * boxSize.x + numOfSprings * 1.f;
-	std::cout << "total len:" << maxLen << std::endl;
+	//std::cout << "total len:" << maxLen << std::endl;
 	auto fixed = _world.entity("fixed_left")
 		.set<Transform>({ {-maxLen/2.f, 5.f, 0.f}, })
 		.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
@@ -163,16 +162,9 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		boxes[numOfBoxes - 1].get_mut<SpringJointComponent>()->Connections.push_back(spring_joint_connection);
 	}
 
-	/*{
-		auto test = _world.entity("test")
-			.set<Transform>({ {1.f, 4.f, 0.f}, });
-		test.set<MeshRenderer>({ box });
-		test.set<RigidBody>(rigid_body);
-
-		test.set<SpringJointComponent>({ {spring_joint_connection} });
-	}*/
-
-	/*std::vector<glm::vec3> points =
+	/*
+	 *demo proj3
+	 *std::vector<glm::vec3> points =
 	{
 		/#1#*{1.f,0.f,0.f},
 		{2.f,0.f,0.0f},
@@ -288,6 +280,24 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 				}
 			}
 			DebugRenderer::EndDrawLine();
+
+			//draw anchor
+			glDisable(GL_DEPTH_TEST);
+			for (auto i : iter)
+			{
+				auto entity = iter.entity(i);
+				const glm::mat4& entityTransform = entity.get<Transform>()->CurrentTransformMatrix;
+				SpringJointComponent& springComp = spring_joint_component[i];
+				for (auto& c : springComp.Connections)
+				{
+					auto target = iter.world().entity(c.Target);
+					glm::vec3 targetGlobalPos = target.get<Transform>()->CurrentTransformMatrix * glm::vec4(c.TargetAnchorPos, 1.f);
+					glm::vec3 anchorGlobalPos = entityTransform * glm::vec4(c.AnchorPos, 1.f);
+
+					DebugRenderer::DrawSphere(targetGlobalPos, 0.1f, {0.5f, 0.f, 1.f});
+					DebugRenderer::DrawSphere(anchorGlobalPos, 0.1f, { 0.5f, 0.f, 1.f });
+				}
+			}
 		});
 
 

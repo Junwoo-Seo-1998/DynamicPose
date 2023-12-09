@@ -329,8 +329,5 @@ std::tuple<glm::vec3, glm::mat3, float> Math::ComputeInertiaTensor(const Mesh& m
 	}
 	InertiaTensor *= -1.f;
 
-	std::cout << glm::to_string(centerOfMas) << std::endl;
-	std::cout << glm::to_string(InertiaTensor) << std::endl;
-
 	return { centerOfMas, InertiaTensor, expectedTotalWeight };
 }
