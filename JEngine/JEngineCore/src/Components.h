@@ -17,6 +17,8 @@ struct Transform
 	glm::vec3 Scale{ 1.f,1.f,1.f };
 	VQS FinalVQS;
 	glm::mat4 FinalTransformMatrix{ 1.f };
+	glm::mat4 ParentTransformMatrix{ 1.f };
+	glm::mat4 CurrentTransformMatrix{ 1.f };
 
 	glm::vec3 GetRight() const
 	{
@@ -35,11 +37,22 @@ struct Transform
 	{
 		return FinalTransformMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
 	}
+
+	glm::mat4 GetToLocalMatrix() const
+	{
+		return glm::inverse(ParentTransformMatrix);
+	}
 };
 
 struct DebugBone
 {
 	bool placeholder;
+};
+
+struct DebugSphere
+{
+	float rad = 1.f;
+	glm::vec3 color{ 1.f };
 };
 
 struct MeshRenderer
@@ -208,4 +221,54 @@ struct IKGoal
 	bool placeholder;
 };
 
+struct RigidBody
+{
+	//constant
+	//should be computed before
+	float InverseMass = 1.f / 10.f;
+	glm::vec3 CenterOfMass{ 0.f };
+	glm::mat3 OriginalInertiaTensor{ 1.f };
+	glm::mat3 OriginalInverseInertiaTensor{ 1.f };
+
+	//state
+	//P
+	glm::vec3 LinearMomentum{ 0.f };
+	glm::vec3 AngularMomentum{ 0.f };
+
+	//Derived (helper variables)
+	glm::vec3 Velocity{ 0.f };
+	glm::vec3 AngularVelocity{ 0.f };
+
+	glm::mat3 InverseInertiaTensor = OriginalInverseInertiaTensor;
+
+	//exerted
+	glm::vec3 CurrentForceAccumulated{0.f};
+	glm::vec3 CurrentTorqueAccumulated{ 0.f };
+
+	//for integration
+	glm::vec3 PrevLinearMomentumHalfStep{ 0.f };
+	glm::vec3 PrevAngularMomentumHalfStep{ 0.f };
+};
+
+
+struct SpringJointConnections
+{
+	uint64_t Target = 0;
+	//local of target
+	glm::vec3 TargetAnchorPos{};
+	float TargetMassOfAnchor = 1.f;
+
+	//local of owner
+	glm::vec3 AnchorPos{};
+	float MassOfAnchor = 1.f;
+
+	float springConstant = 1.f;
+	float springLength = 1.f;
+	float damping = 0.5f;
+};
+
+struct SpringJointComponent
+{
+	std::vector<SpringJointConnections> Connections;
+};
 

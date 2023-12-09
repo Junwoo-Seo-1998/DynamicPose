@@ -33,7 +33,7 @@ flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string
 				obj.set<BoneComponent>({ iter->second.id ,iter->second.offset });
 			}
 
-			if(model.meshes.size()>0)
+			if(static_cast<int>(model.meshes.size())>0)
 			{
 				for(auto m:model.meshes)
 				{
@@ -61,7 +61,6 @@ flecs::entity CreateModel(flecs::world& _world, Model& _model, const std::string
 void SceneRenderer::RegisterSystem(flecs::world& _world)
 {
 	m_VertexArray = VertexArray::CreateVertexArray();
-	//testing
 	{
 		ShaderSource source{};
 		source[ShaderType::VertexShader] = { "Shader/simple.vert" };
@@ -76,24 +75,103 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		m_MeshRenderShader = Shader::CreateShaderFromFile(source);
 	}
 
+	/*
 	Model plane=AssimpParser::ParseModel("Plane.fbx");
 	auto planeEntity  = CreateModel(_world, plane, "PlaneObj");
-	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };
+	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };*/
 
 	Model model = AssimpParser::ParseModel("Medieval.fbx");
 	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
-
-	auto one=CreateModel(_world, model,"MainModel");
+	_world.get_mut<Config>()->AnimationList = animationHandle;
+	auto one = CreateModel(_world, model, "MainModel");
+	one.get_mut<Transform>()->Position = { -10.f, -10.f, 0.f };
 	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
-	one.set<AnimatorComponent>({ animationHandle[16], false});
+	one.set<AnimatorComponent>({ animationHandle[16], true });
 
-	std::vector<glm::vec3> points =
+	constexpr int numOfBoxes = 8;
+	constexpr int numOfSprings = numOfBoxes + 1;
+	glm::vec3 boxSize = glm::vec3{ 5.f, 1.f, 1.f };
+	Mesh boxMesh = Math::GenerateBox(boxSize);
+
+	
+	float maxLen = numOfBoxes * boxSize.x + numOfSprings * 1.f;
+	//std::cout << "total len:" << maxLen << std::endl;
+	auto fixed = _world.entity("fixed_left")
+		.set<Transform>({ {-maxLen/2.f, 5.f, 0.f}, })
+		.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
+
+	auto fixed_right = _world.entity("fixed_right")
+		.set<Transform>({ {maxLen / 2.f, 5.f, 0.f}, })
+		.set<DebugSphere>({ 0.3f, {1.f, 0.f,0.f} });
+
+	auto [CenterOfMass, I_Obj, BoxWeight] = Math::ComputeInertiaTensor(boxMesh, 1.f);
+
+	RigidBody rigid_body{};
+	rigid_body.InverseMass = 1.f / BoxWeight;
+	rigid_body.CenterOfMass = CenterOfMass;
+	rigid_body.OriginalInertiaTensor = I_Obj;
+	rigid_body.OriginalInverseInertiaTensor = glm::inverse(I_Obj);
+	rigid_body.InverseInertiaTensor = rigid_body.OriginalInverseInertiaTensor;
+
+	SpringJointConnections spring_joint_connection;
+	spring_joint_connection.springConstant = 30.f;
+	spring_joint_connection.AnchorPos = glm::vec3{ -boxSize.x / 2.f,0.f,0.f };
+	spring_joint_connection.MassOfAnchor = BoxWeight / 2.f;
+	spring_joint_connection.TargetMassOfAnchor = BoxWeight / 2.f;
+	
+
+	std::vector<flecs::entity> boxes;
+	float xPos = -(maxLen / 2.f - 1.f - boxSize.x / 2.f);
+
 	{
-		/*/*{1.f,0.f,0.f},
+		std::string name = std::string("box0");
+		auto box = _world.entity(name.c_str());
+		box.set<Transform>({ {xPos, 4.f, 0.f}, });
+		box.set<MeshRenderer>({ boxMesh });
+		box.set<RigidBody>(rigid_body);
+		box.set<SpringJointComponent>({});
+		boxes.push_back(box);
+		xPos += 1.f + boxSize.x;
+	}
+
+	for (int i = 1; i < numOfBoxes; ++i)
+	{
+		std::string name = std::string("box") + std::to_string(i);
+		auto box = _world.entity(name.c_str());
+		box.set<Transform>({ {xPos, 4.f, 0.f}, });
+		box.set<MeshRenderer>({ boxMesh });
+		box.set<RigidBody>(rigid_body);
+		spring_joint_connection.Target = boxes[i - 1].id();
+		spring_joint_connection.TargetAnchorPos = glm::vec3{ boxSize.x / 2.f,0.f,0.f };
+		box.set<SpringJointComponent>({ {spring_joint_connection} });
+		boxes.push_back(box);
+		xPos += 1.f + boxSize.x;
+	}
+
+
+	{
+		spring_joint_connection.Target = fixed.id();
+		spring_joint_connection.TargetAnchorPos = glm::vec3{ 0.f };
+		spring_joint_connection.AnchorPos = glm::vec3{ -boxSize.x / 2.f,0.f,0.f };
+
+		boxes[0].get_mut<SpringJointComponent>()->Connections.push_back(spring_joint_connection);
+
+		spring_joint_connection.Target = fixed_right.id();
+		spring_joint_connection.TargetAnchorPos = glm::vec3{ 0.f };
+		spring_joint_connection.AnchorPos = glm::vec3{ boxSize.x / 2.f,0.f,0.f };
+
+		boxes[numOfBoxes - 1].get_mut<SpringJointComponent>()->Connections.push_back(spring_joint_connection);
+	}
+
+	/*
+	 *demo proj3
+	 *std::vector<glm::vec3> points =
+	{
+		/#1#*{1.f,0.f,0.f},
 		{2.f,0.f,0.0f},
 		{3.f,0.f,0.0f},
 		{4.f,0.f,0.f},
-		{5.f,0.f,0.f},#1#
+		{5.f,0.f,0.f},#2#
 		{0.f,0.f,0.f},
 		{2.f,0.f,-3.f},
 		{5.f, 0.f, -2.f},
@@ -102,7 +180,7 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		{7.f, 0.f, 4.f},
 		{6.f, 0.f, 6.f},
 		{4.f, 0.f, 5.f},
-		{2.f, 0.f, 4.f},*/
+		{2.f, 0.f, 4.f},#1#
 	};
 
 	auto sphere = Math::GenerateSpherePointsWithIndices();
@@ -158,13 +236,11 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 	IKee.set<IKEndEffectComponent>({ goal.id() });
 	one.set<IKComponent>({ jointIDs, IKee.id() });
 
-	one.set<PathComponent>({ points });
+	one.set<PathComponent>({ points });*/
 
 	/*auto two = CreateModel(_world, model, "Model_2");
 	two.set<Transform>({ {100, 0, -100}, });
 	two.set<AnimatorComponent>({ animationHandle[3], });*/
-
-	_world.get_mut<Config>()->AnimationList = animationHandle;
 
 	_world.system<Transform, DebugBone>("Debug Bone Renderer").kind(flecs::OnValidate).iter([&](flecs::iter& iter, Transform* transform, DebugBone* bone)
 	{
@@ -183,6 +259,61 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 
 		DebugRender(iter, joints);
 	});
+
+
+	_world.system<SpringJointComponent>("Debug Spring").kind(flecs::OnValidate).iter([&](flecs::iter& iter, SpringJointComponent* spring_joint_component)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+				* Application::Get().GetWorld().get<MainCamera>()->view;
+			DebugRenderer::BeginDrawLine(viewProj, { 1.f,1.f,0.f });
+			for (auto i : iter)
+			{
+				auto entity = iter.entity(i);
+				const glm::mat4& entityTransform = entity.get<Transform>()->CurrentTransformMatrix;
+				SpringJointComponent& springComp = spring_joint_component[i];
+				for (auto& c : springComp.Connections)
+				{
+					auto target = iter.world().entity(c.Target);
+					glm::vec3 targetGlobalPos = target.get<Transform>()->CurrentTransformMatrix * glm::vec4(c.TargetAnchorPos, 1.f);
+					glm::vec3 anchorGlobalPos = entityTransform * glm::vec4(c.AnchorPos, 1.f);
+					DebugRenderer::DrawLine(anchorGlobalPos, targetGlobalPos);
+				}
+			}
+			DebugRenderer::EndDrawLine();
+
+			//draw anchor
+			glDisable(GL_DEPTH_TEST);
+			for (auto i : iter)
+			{
+				auto entity = iter.entity(i);
+				const glm::mat4& entityTransform = entity.get<Transform>()->CurrentTransformMatrix;
+				SpringJointComponent& springComp = spring_joint_component[i];
+				for (auto& c : springComp.Connections)
+				{
+					auto target = iter.world().entity(c.Target);
+					glm::vec3 targetGlobalPos = target.get<Transform>()->CurrentTransformMatrix * glm::vec4(c.TargetAnchorPos, 1.f);
+					glm::vec3 anchorGlobalPos = entityTransform * glm::vec4(c.AnchorPos, 1.f);
+
+					DebugRenderer::DrawSphere(targetGlobalPos, 0.1f, {0.5f, 0.f, 1.f});
+					DebugRenderer::DrawSphere(anchorGlobalPos, 0.1f, { 0.5f, 0.f, 1.f });
+				}
+			}
+		});
+
+
+	_world.system<DebugSphere>("Debug Sphere").kind(flecs::OnValidate).iter([&](flecs::iter& iter, DebugSphere* sphere)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glm::mat4 viewProj = Application::Get().GetWorld().get<MainCamera>()->projection
+				* Application::Get().GetWorld().get<MainCamera>()->view;
+
+			DebugRenderer::SetViewProjection(viewProj);
+			for (auto i : iter)
+			{
+				DebugRenderer::DrawSphere(iter.entity(i).get<Transform>()->GetWorldOrigin(), sphere[i].rad, sphere[i].color);
+			}
+		});
 
 	_world.system<IKGoal>("IK Goal").kind(flecs::OnValidate).iter([&](flecs::iter& iter, IKGoal* goal)
 		{

@@ -99,6 +99,7 @@
     </ClInclude>
     <ClInclude Include="src\System\IKSystem.h" />
     <ClInclude Include="src\Util\EntityUtil.h" />
+    <ClInclude Include="src\System\PhysicsSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
@@ -167,5 +168,6 @@
     </ClCompile>
     <ClCompile Include="src\System\IKSystem.cpp" />
     <ClCompile Include="src\Util\EntityUtil.cpp" />
+    <ClCompile Include="src\System\PhysicsSystem.cpp" />
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@ void TransformSystem::RegisterSystem(flecs::world& _world)
 {
 	_world.system<Transform, Transform>("TransformSystem")
 		// select 2nd transform argument
-		.term_at(2).parent().cascade().optional()
+		.term_at(2).parent().cascade().optional().kind(flecs::PreUpdate)
 		.iter([&](flecs::iter& iter, Transform* transform, Transform* p_transform)
 			{
 				UpdateTransform(iter, transform, p_transform);
@@ -16,7 +16,7 @@ void TransformSystem::RegisterSystem(flecs::world& _world)
 void TransformSystem::UpdateTransform(flecs::iter& iter, Transform* transform, Transform* p_transform)
 {
 	//imgui option to toggle vqs
-	bool useVQS = iter.world().get<Config>()->UseVQS;
+	bool useVQS = false;
 	for (auto i: iter) //iter is sorted index with breath first search parent->child
 	{
 		Transform& transformComp = transform[i];
@@ -40,6 +40,9 @@ void TransformSystem::UpdateTransform(flecs::iter& iter, Transform* transform, T
 			final = glm::translate(glm::mat4(1.0f), transformComp.Position)
 				* glm::toMat4(transformComp.Rotation)
 				* glm::scale(glm::mat4(1.0f), transformComp.Scale);
+
+			transformComp.ParentTransformMatrix = glm::mat4{ 1.f };
+			transformComp.CurrentTransformMatrix = final;
 		}
 
 		//compute global matrix if they have parents
@@ -52,6 +55,8 @@ void TransformSystem::UpdateTransform(flecs::iter& iter, Transform* transform, T
 			}
 			else
 			{
+				transformComp.CurrentTransformMatrix = final;
+				transformComp.ParentTransformMatrix = p_transform->FinalTransformMatrix;
 				final = p_transform->FinalTransformMatrix * final;
 			}
 		}

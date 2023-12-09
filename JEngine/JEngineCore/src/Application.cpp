@@ -15,6 +15,7 @@
 #include "System/CurveSystem.h"
 #include "System/Demo.h"
 #include "System/IKSystem.h"
+#include "System/PhysicsSystem.h"
 #include "System/TransformSystem.h"
 #include "System/Graphics/AnimationSystem.h"
 #include "System/Graphics/SceneCamera.h"
@@ -58,11 +59,12 @@ int Application::Run()
 	//register systems
 	m_World.add<Config>();
 	m_World.add<MainCamera>();
-	m_World.entity("MainCamera").set<Transform>({ {0.f,7.5f,10.f}, 
+	m_World.entity("MainCamera").set<Transform>({ glm::vec3{0.f,7.5f,10.f}*2.f, 
 		glm::quat(glm::radians(glm::vec3(-30.f, 0.f, 0.f))),
 	}).add<Camera>();
 
 	AddSystem<TransformSystem>();
+	AddSystem<PhysicsSystem>();
 	AddSystem<AnimationSystem>();
 	AddSystem<IKSystem>();
 	AddSystem<CurveSystem>();
