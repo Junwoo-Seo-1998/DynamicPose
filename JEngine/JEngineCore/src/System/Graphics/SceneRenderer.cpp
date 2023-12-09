@@ -75,17 +75,18 @@ void SceneRenderer::RegisterSystem(flecs::world& _world)
 		m_MeshRenderShader = Shader::CreateShaderFromFile(source);
 	}
 
-	/*Model plane=AssimpParser::ParseModel("Plane.fbx");
+	/*
+	Model plane=AssimpParser::ParseModel("Plane.fbx");
 	auto planeEntity  = CreateModel(_world, plane, "PlaneObj");
-	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };
+	planeEntity.get_mut<Transform>()->Scale = { 0.1f,0.1f,0.1f };*/
 
 	Model model = AssimpParser::ParseModel("Medieval.fbx");
 	auto animationHandle = AssimpParser::ParseAnimations("Medieval.fbx");
 	_world.get_mut<Config>()->AnimationList = animationHandle;
 	auto one = CreateModel(_world, model, "MainModel");
-	one.get_mut<Transform>()->Position = { -3.f, 0.f, 0.f };
+	one.get_mut<Transform>()->Position = { -10.f, -10.f, 0.f };
 	one.get_mut<Transform>()->Scale = { 0.01f,0.01f,0.01f };
-	one.set<AnimatorComponent>({ animationHandle[16], true });*/
+	one.set<AnimatorComponent>({ animationHandle[16], true });
 
 	constexpr int numOfBoxes = 8;
 	constexpr int numOfSprings = numOfBoxes + 1;
